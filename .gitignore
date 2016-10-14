@@ -1,0 +1,15 @@
+*.project
+*.mk
+
+Examples
+build
+bin
+lib
+Vocabulary/ORBvoc.txt
+include/Thirdparty
+Thirdparty/g2o/build
+Thirdparty/g2o/lib
+Thirdparty/g2o/config.h
+Thirdparty/DBoW/build
+Thirdparty/DBoW/lib
+KeyFrameTrajectory*
