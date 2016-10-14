@@ -60,6 +60,9 @@ public:
 
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
     System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true);
+    
+    // Destructor, clean up the managed memory
+    virtual ~System();
 
     // Proccess the given stereo frame. Images must be synchronized and rectified.
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
@@ -105,6 +108,9 @@ public:
     // Call first Shutdown()
     // See format details at: http://www.cvlibs.net/datasets/kitti/eval_odometry.php
     void SaveTrajectoryKITTI(const string &filename);
+
+    vector<KeyFrame*> GetKeyFrames() const;
+    const Tracking* GetTracking() const;
 
     // TODO: Save/Load functions
     // SaveMap(const string &filename);

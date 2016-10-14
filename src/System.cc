@@ -112,6 +112,30 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
 }
 
+System::~System()
+{
+    if (mptLocalMapping->joinable())
+    {
+        // This is for safety. Really, call Shutdown before this.
+        Shutdown();
+    }
+    
+    // TODO: Smart pointers.
+    delete mptLocalMapping;
+    delete mptLoopClosing;
+    delete mptViewer;
+    
+    delete mpVocabulary;
+    delete mpKeyFrameDatabase;
+    delete mpMap;
+    delete mpTracker;
+    delete mpLocalMapper;
+    delete mpLoopCloser;
+    delete mpViewer;
+    delete mpFrameDrawer;
+    delete mpMapDrawer;
+}
+
 cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
 {
     if(mSensor!=STEREO)
@@ -277,6 +301,17 @@ void System::Shutdown()
     {
         usleep(5000);
     }
+    
+    // Blocking wait for threads to stop.
+    if (mptLocalMapping->joinable()) {
+        mptLocalMapping->join();
+    }
+    if (mptLoopClosing->joinable()) {
+        mptLoopClosing->join();
+    }
+    if (mptViewer->joinable()) {
+        mptViewer->join();
+    }
 
     pangolin::BindToContext("ORB-SLAM2: Map Viewer");
 }
@@ -421,6 +456,16 @@ void System::SaveTrajectoryKITTI(const string &filename)
     }
     f.close();
     cout << endl << "trajectory saved!" << endl;
+}
+
+vector<KeyFrame*> System::GetKeyFrames() const
+{
+    return mpMap->GetAllKeyFrames();
+}
+
+const Tracking* System::GetTracking() const
+{
+    return mpTracker;
 }
 
 } //namespace ORB_SLAM
