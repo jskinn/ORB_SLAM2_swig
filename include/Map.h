@@ -25,6 +25,7 @@
 #include "KeyFrame.h"
 #include <set>
 
+#include <memory>
 #include <mutex>
 
 
@@ -40,15 +41,15 @@ class Map
 public:
     Map();
 
-    void AddKeyFrame(KeyFrame* pKF);
-    void AddMapPoint(MapPoint* pMP);
-    void EraseMapPoint(MapPoint* pMP);
-    void EraseKeyFrame(KeyFrame* pKF);
-    void SetReferenceMapPoints(const std::vector<MapPoint*> &vpMPs);
+    void AddKeyFrame(std::shared_ptr<KeyFrame> pKF);
+    void AddMapPoint(std::shared_ptr<MapPoint> pMP);
+    void EraseMapPoint(std::shared_ptr<MapPoint> pMP);
+    void EraseKeyFrame(std::shared_ptr<KeyFrame> pKF);
+    void SetReferenceMapPoints(const std::vector<std::shared_ptr<MapPoint>> &vpMPs);
 
-    std::vector<KeyFrame*> GetAllKeyFrames();
-    std::vector<MapPoint*> GetAllMapPoints();
-    std::vector<MapPoint*> GetReferenceMapPoints();
+    std::vector<std::shared_ptr<KeyFrame>> GetAllKeyFrames();
+    std::vector<std::shared_ptr<MapPoint>> GetAllMapPoints();
+    std::vector<std::shared_ptr<MapPoint>> GetReferenceMapPoints();
 
     long unsigned int MapPointsInMap();
     long unsigned  KeyFramesInMap();
@@ -57,7 +58,7 @@ public:
 
     void clear();
 
-    vector<KeyFrame*> mvpKeyFrameOrigins;
+    vector<std::shared_ptr<KeyFrame>> mvpKeyFrameOrigins;
 
     std::mutex mMutexMapUpdate;
 
@@ -65,10 +66,10 @@ public:
     std::mutex mMutexPointCreation;
 
 protected:
-    std::set<MapPoint*> mspMapPoints;
-    std::set<KeyFrame*> mspKeyFrames;
+    std::set<std::shared_ptr<MapPoint>> mspMapPoints;
+    std::set<std::shared_ptr<KeyFrame>> mspKeyFrames;
 
-    std::vector<MapPoint*> mvpReferenceMapPoints;
+    std::vector<std::shared_ptr<MapPoint>> mvpReferenceMapPoints;
 
     long unsigned int mnMaxKFid;
 

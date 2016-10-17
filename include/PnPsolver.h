@@ -51,6 +51,8 @@
 #ifndef PNPSOLVER_H
 #define PNPSOLVER_H
 
+#include <memory>
+#include <vector>
 #include <opencv2/core/core.hpp>
 #include "MapPoint.h"
 #include "Frame.h"
@@ -60,7 +62,7 @@ namespace ORB_SLAM2
 
 class PnPsolver {
  public:
-  PnPsolver(const Frame &F, const vector<MapPoint*> &vpMapPointMatches);
+  PnPsolver(const Frame &F, const std::vector<std::shared_ptr<MapPoint>> &vpMapPointMatches);
 
   ~PnPsolver();
 
@@ -134,7 +136,7 @@ class PnPsolver {
   double cws[4][3], ccs[4][3];
   double cws_determinant;
 
-  vector<MapPoint*> mvpMapPointMatches;
+  vector<std::shared_ptr<MapPoint>> mvpMapPointMatches;
 
   // 2D Points
   vector<cv::Point2f> mvP2D;
