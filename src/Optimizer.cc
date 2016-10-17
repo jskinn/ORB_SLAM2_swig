@@ -52,11 +52,13 @@ void Optimizer::BundleAdjustment(const vector<std::shared_ptr<KeyFrame> > &vpKFs
     vector<bool> vbNotIncludedMP;
     vbNotIncludedMP.resize(vpMP.size());
 
+    // Note: g2o handles deletion of these objects, I don't think this leaks memory.
     g2o::SparseOptimizer optimizer;
-    g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType> linearSolver;
-    g2o::BlockSolver_6_3 solver_inner(&linearSolver);
-    g2o::OptimizationAlgorithmLevenberg solver(&solver_inner);
-    optimizer.setAlgorithm(&solver);
+    g2o::BlockSolver_6_3::LinearSolverType* linearSolver;
+    linearSolver = new g2o::LinearSolverEigen<g2o::BlockSolver_6_3::PoseMatrixType>();
+    g2o::BlockSolver_6_3* solver_ptr = new g2o::BlockSolver_6_3(linearSolver);
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
+    optimizer.setAlgorithm(solver);
 
     if(pbStopFlag)
         optimizer.setForceStopFlag(pbStopFlag);
@@ -234,11 +236,13 @@ void Optimizer::BundleAdjustment(const vector<std::shared_ptr<KeyFrame> > &vpKFs
 
 int Optimizer::PoseOptimization(Frame& pFrame)
 {
+    // Note: g2o handles deletion of these objects
     g2o::SparseOptimizer optimizer;
-    g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType> linearSolver;
-    g2o::BlockSolver_6_3 solver_inner(&linearSolver);
-    g2o::OptimizationAlgorithmLevenberg solver(&solver_inner);
-    optimizer.setAlgorithm(&solver);
+    g2o::BlockSolver_6_3::LinearSolverType* linearSolver;
+    linearSolver = new g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType>();
+    g2o::BlockSolver_6_3* solver_ptr = new g2o::BlockSolver_6_3(linearSolver);
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
+    optimizer.setAlgorithm(solver);
 
     int nInitialCorrespondences=0;
 
@@ -778,12 +782,12 @@ void Optimizer::OptimizeEssentialGraph(std::shared_ptr<Map> pMap, std::shared_pt
     // Setup optimizer
     g2o::SparseOptimizer optimizer;
     optimizer.setVerbose(false);
-    g2o::LinearSolverEigen<g2o::BlockSolver_7_3::PoseMatrixType> linearSolver;
-    g2o::BlockSolver_7_3 solver_inner(&linearSolver);
-    g2o::OptimizationAlgorithmLevenberg solver(&solver_inner);
+    g2o::BlockSolver_7_3::LinearSolverType* linearSolver = new g2o::LinearSolverEigen<g2o::BlockSolver_7_3::PoseMatrixType>();
+    g2o::BlockSolver_7_3* solver_ptr = new g2o::BlockSolver_7_3(linearSolver);
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
 
-    solver.setUserLambdaInit(1e-16);
-    optimizer.setAlgorithm(&solver);
+    solver->setUserLambdaInit(1e-16);
+    optimizer.setAlgorithm(solver);
 
     const vector<std::shared_ptr<KeyFrame>> vpKFs = pMap->GetAllKeyFrames();
     const vector<std::shared_ptr<MapPoint>> vpMPs = pMap->GetAllMapPoints();
@@ -1037,10 +1041,10 @@ void Optimizer::OptimizeEssentialGraph(std::shared_ptr<Map> pMap, std::shared_pt
 int Optimizer::OptimizeSim3(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<KeyFrame> pKF2, vector<std::shared_ptr<MapPoint> > &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale)
 {
     g2o::SparseOptimizer optimizer;
-    g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType> linearSolver;
-    g2o::BlockSolverX solver_inner(&linearSolver);
-    g2o::OptimizationAlgorithmLevenberg solver(&solver_inner);
-    optimizer.setAlgorithm(&solver);
+    g2o::BlockSolverX::LinearSolverType* linearSolver = new g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>();
+    g2o::BlockSolverX* solver_ptr = new g2o::BlockSolverX(linearSolver);
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
+    optimizer.setAlgorithm(solver);
 
     // Calibration
     const cv::Mat &K1 = pKF1->mK;
