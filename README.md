@@ -1,3 +1,9 @@
+# ORB-SLAM2 FORK
+This is a fork of the ORB_SLAM2 repository found at [https://github.com/raulmur/ORB_SLAM2](https://github.com/raulmur/ORB_SLAM2).
+I've forked this to fix up some of the memory management and stability issues in the original source. In particular, I've switched to using C++11 smart pointers whereever possible in the hopes of reducing memory leaks and avoiding segfaults.
+
+Original readme can be found below.
+
 # ORB-SLAM2
 **Authors:** [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2))
 
