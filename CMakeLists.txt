@@ -32,6 +32,12 @@ find_package(OpenCV 2.4.3 REQUIRED)
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 
+# Version numbers, 
+set(ORBSLAM_VERSION_MAJOR 1)
+set(ORBSLAM_VERSION_MINOR 0)
+set(ORBSLAM_VERSION_PATCH 0)
+set(ORBSLAM_VERSION_STRING ${ORBSLAM_VERSION_MAJOR}.${ORBSLAM_VERSION_MINOR}.${ORBSLAM_VERSION_PATCH})
+
 include_directories(
 ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
@@ -71,6 +77,8 @@ ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${ORBSLAM_VERSION_STRING} SOVERSION ${ORBSLAM_VERSION_MAJOR})
+
 # Set preprocessor macros for the library based on the build type. Case insensitive.
 string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_UPPERCASE_BUILD_TYPE)
 if(CMAKE_UPPERCASE_BUILD_TYPE MATCHES "DEBUG")
@@ -102,15 +110,25 @@ add_executable(mono_kitti
 Examples/Monocular/mono_kitti.cc)
 target_link_libraries(mono_kitti ${PROJECT_NAME})
 
+
+
 # installation of the library
 # TODO: Install to /usr/local properly, so we can have FindORB_SLAM2.cmake
-set(INSTALL_DIR /home/john/Software/ORB_SLAM2)
-install(TARGETS ${PROJECT_NAME} DESTINATION  ${INSTALL_DIR}/lib)
-install(FILES ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so DESTINATION ${INSTALL_DIR}/lib)
+#set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/ORB_SLAM2)
+install(TARGETS ${PROJECT_NAME}
+    DESTINATION  lib
+    COMPONENT library)
+install(FILES
+        ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
+        ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+    DESTINATION lib
+    COMPONENT library)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
-    DESTINATION ${INSTALL_DIR}/include/ORB_SLAM2
+    DESTINATION include/ORB_SLAM2
+    COMPONENT library
     FILES_MATCHING PATTERN "*.h"
-    PATTERN "${PROJECT_SOURCE_DIR}/include/Thirdparty" EXCLUDE)
+    PATTERN "Thirdparty" EXCLUDE)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/Thirdparty/
-    DESTINATION ${INSTALL_DIR}/include/ORB_SLAM2/Thirdparty
-    FILES_MATCHING PATTERN "*.h")
+    DESTINATION include/ORB_SLAM2/Thirdparty
+    COMPONENT library
+    FILES_MATCHING REGEX ".*\\.h(pp)?")
