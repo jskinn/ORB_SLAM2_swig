@@ -65,7 +65,12 @@ public:
     virtual ~System();
     
     // Set up the system, starting the threads and beginning execution
+    // Return true if the system sucessfully started up or is already running,
+    // false if there were errors doing so, usually because there were errors opening the settings or vocab files.
     bool StartUp(const std::string &strVocFile, const std::string &strSettingsFile, const bool bUseViewer = true);
+    
+    // Is the system currently running, that is, has StartUp already been called.
+    bool IsRunning();
 
     // Proccess the given stereo frame. Images must be synchronized and rectified.
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.

@@ -145,6 +145,11 @@ bool System::StartUp(const std::string &strVocFile, const std::string &strSettin
     return mbIsRunning;
 }
 
+bool System::IsRunning()
+{
+    return mbIsRunning;
+}
+
 cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
 {
     if (!mbIsRunning) {

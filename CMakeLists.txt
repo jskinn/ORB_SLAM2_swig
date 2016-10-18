@@ -103,8 +103,14 @@ Examples/Monocular/mono_kitti.cc)
 target_link_libraries(mono_kitti ${PROJECT_NAME})
 
 # installation of the library
+# TODO: Install to /usr/local properly, so we can have FindORB_SLAM2.cmake
 set(INSTALL_DIR /home/john/Software/ORB_SLAM2)
 install(TARGETS ${PROJECT_NAME} DESTINATION  ${INSTALL_DIR}/lib)
 install(FILES ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so DESTINATION ${INSTALL_DIR}/lib)
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION ${INSTALL_DIR}/include/ORB_SLAM2 FILES_MATCHING PATTERN "*.h")
-#install(DIRECTORY ${PROJECT_SOURCE_DIR}/Thirdparty DESTINATION ${INSTALL_DIR}/include FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+    DESTINATION ${INSTALL_DIR}/include/ORB_SLAM2
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN "${PROJECT_SOURCE_DIR}/include/Thirdparty" EXCLUDE)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/Thirdparty/
+    DESTINATION ${INSTALL_DIR}/include/ORB_SLAM2/Thirdparty
+    FILES_MATCHING PATTERN "*.h")
