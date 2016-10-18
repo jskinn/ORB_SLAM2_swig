@@ -3,6 +3,12 @@
 build
 bin
 lib
+.cmake_dirty
+Examples/Custom
+Examples/Monocular/mono_kitti
+Examples/Monocular/mono_tum
+Examples/RGB-D/rgbd_tum
+Examples/Stereo/stereo_kitti
 Vocabulary/ORBvoc.txt
 include/Thirdparty
 Thirdparty/g2o/build
