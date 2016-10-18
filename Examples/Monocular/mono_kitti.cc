@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     int nImages = vstrImageFilenames.size();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::MONOCULAR,true);
+    std::shared_ptr<ORB_SLAM2::System> SLAM = std::make_shared<ORB_SLAM2::System>(ORB_SLAM2::System::MONOCULAR);
 
     // Vector for tracking time statistics
     vector<float> vTimesTrack;
@@ -59,6 +59,8 @@ int main(int argc, char **argv)
     cout << endl << "-------" << endl;
     cout << "Start processing sequence ..." << endl;
     cout << "Images in the sequence: " << nImages << endl << endl;
+    
+    SLAM->StartUp(argv[1],argv[2], true);
 
     // Main loop
     cv::Mat im;
@@ -81,7 +83,7 @@ int main(int argc, char **argv)
 #endif
 
         // Pass the image to the SLAM system
-        SLAM.TrackMonocular(im,tframe);
+        SLAM->TrackMonocular(im,tframe);
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -105,7 +107,7 @@ int main(int argc, char **argv)
     }
 
     // Stop all threads
-    SLAM.Shutdown();
+    SLAM->Shutdown();
 
     // Tracking time statistics
     sort(vTimesTrack.begin(),vTimesTrack.end());
@@ -119,7 +121,7 @@ int main(int argc, char **argv)
     cout << "mean tracking time: " << totaltime/nImages << endl;
 
     // Save camera trajectory
-    SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+    SLAM->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
 
     return 0;
 }

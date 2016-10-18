@@ -37,17 +37,6 @@ System::System(const eSensor sensor):
 
 }
 
-System::System(const std::string &strVocFile, const std::string &strSettingsFile, const eSensor sensor, const bool bUseViewer):
-        mbIsRunning(false),
-        mSensor(sensor),
-        mbReset(false),
-        mbActivateLocalizationMode(false),
-        mbDeactivateLocalizationMode(false)
-{
-    // TODO: Get rid of this constructor, it causes errors, because the object is not owned yet, but it calls shared_from_this internally
-    StartUp(strVocFile, strSettingsFile, bUseViewer);
-}
-
 System::~System()
 {
     if (mptLocalMapping->joinable())
@@ -63,7 +52,7 @@ bool System::StartUp(const std::string &strVocFile, const std::string &strSettin
         return true;
     }
     
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
     // Output welcome message
     std::cout << std::endl <<
     "ORB-SLAM2 Copyright (C) 2014-2016 Raul Mur-Artal, University of Zaragoza." << std::endl <<
@@ -80,36 +69,36 @@ bool System::StartUp(const std::string &strVocFile, const std::string &strSettin
     } else if(mSensor==RGBD) {
         std::cout << "RGB-D" << std::endl;
     }
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
 
     //Check settings file
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
        std::cerr << "Failed to open settings file at: " << strSettingsFile << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
        return false;
     }
 
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
     //Load ORB Vocabulary
     std::cout << std::endl << "Loading ORB Vocabulary. This could take a while..." << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
 
     mpVocabulary = std::make_shared<ORBVocabulary>();
     bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
     if(!bVocLoad)
     {
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
         std::cerr << "Wrong path to vocabulary. " << std::endl;
         std::cerr << "Falied to open at: " << strVocFile << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
         return false;
     }
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
     std::cout << "Vocabulary loaded!" << std::endl << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
 
     //Create KeyFrame Database
     mpKeyFrameDatabase = std::make_shared<KeyFrameDatabase>(mpVocabulary);
@@ -163,9 +152,9 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
     }
     if(mSensor!=STEREO)
     {
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
         std::cerr << "ERROR: you called TrackStereo but input sensor was not set to STEREO." << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
         return cv::Mat();
     }   
 
@@ -210,9 +199,9 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
 {
     if(mSensor!=RGBD)
     {
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
         std::cerr << "ERROR: you called TrackRGBD but input sensor was not set to RGBD." << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
         return cv::Mat();
     }    
 
@@ -260,9 +249,9 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
     }
     if(mSensor!=MONOCULAR)
     {
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
         std::cerr << "ERROR: you called TrackMonocular but input sensor was not set to Monocular." << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
         return cv::Mat();
     }
 
@@ -357,9 +346,9 @@ void System::Shutdown()
 
 void System::SaveTrajectoryTUM(const std::string &filename)
 {
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
     std::cout << std::endl << "Saving camera trajectory to " << filename << " ..." << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
 
     vector<std::shared_ptr<KeyFrame>> vpKFs = mpMap->GetAllKeyFrames();
     sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
@@ -409,17 +398,17 @@ void System::SaveTrajectoryTUM(const std::string &filename)
         f << setprecision(6) << *lT << " " <<  setprecision(9) << twc.at<float>(0) << " " << twc.at<float>(1) << " " << twc.at<float>(2) << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << std::endl;
     }
     f.close();
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
     std::cout << std::endl << "trajectory saved!" << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
 }
 
 
 void System::SaveKeyFrameTrajectoryTUM(const std::string &filename)
 {
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
     std::cout << std::endl << "Saving keyframe trajectory to " << filename << " ..." << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
 
     vector<std::shared_ptr<KeyFrame>> vpKFs = mpMap->GetAllKeyFrames();
     sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
@@ -450,16 +439,16 @@ void System::SaveKeyFrameTrajectoryTUM(const std::string &filename)
     }
 
     f.close();
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
     std::cout << std::endl << "trajectory saved!" << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
 }
 
 void System::SaveTrajectoryKITTI(const std::string &filename)
 {
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
     std::cout << std::endl << "Saving camera trajectory to " << filename << " ..." << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
 
     vector<std::shared_ptr<KeyFrame>> vpKFs = mpMap->GetAllKeyFrames();
     sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
@@ -504,9 +493,9 @@ void System::SaveTrajectoryKITTI(const std::string &filename)
              Rwc.at<float>(2,0) << " " << Rwc.at<float>(2,1)  << " " << Rwc.at<float>(2,2) << " "  << twc.at<float>(2) << std::endl;
     }
     f.close();
-#ifndef NDEBUG
+#ifdef DEBUG_MESSAGE
     std::cout << std::endl << "trajectory saved!" << std::endl;
-#endif //NDEBUG
+#endif //DEBUG_MESSAGE
 }
 
 vector<std::shared_ptr<KeyFrame>> System::GetKeyFrames() const

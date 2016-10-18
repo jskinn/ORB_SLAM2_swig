@@ -71,19 +71,26 @@ ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 )
 
+# Set preprocessor macros for the library based on the build type. Case insensitive.
+string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_UPPERCASE_BUILD_TYPE)
+if(CMAKE_UPPERCASE_BUILD_TYPE MATCHES "DEBUG")
+    message("Including debug print statements")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG_MESSAGE=1)
+endif()
+
 # Build examples
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
 
-add_executable(rgbd_tum
-Examples/RGB-D/rgbd_tum.cc)
-target_link_libraries(rgbd_tum ${PROJECT_NAME})
+#add_executable(rgbd_tum
+#Examples/RGB-D/rgbd_tum.cc)
+#target_link_libraries(rgbd_tum ${PROJECT_NAME})
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
 
-add_executable(stereo_kitti
-Examples/Stereo/stereo_kitti.cc)
-target_link_libraries(stereo_kitti ${PROJECT_NAME})
+#add_executable(stereo_kitti
+#Examples/Stereo/stereo_kitti.cc)
+#target_link_libraries(stereo_kitti ${PROJECT_NAME})
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
 
@@ -95,3 +102,9 @@ add_executable(mono_kitti
 Examples/Monocular/mono_kitti.cc)
 target_link_libraries(mono_kitti ${PROJECT_NAME})
 
+# installation of the library
+set(INSTALL_DIR /home/john/Software/ORB_SLAM2)
+install(TARGETS ${PROJECT_NAME} DESTINATION  ${INSTALL_DIR}/lib)
+install(FILES ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so DESTINATION ${INSTALL_DIR}/lib)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION ${INSTALL_DIR}/include/ORB_SLAM2 FILES_MATCHING PATTERN "*.h")
+#install(DIRECTORY ${PROJECT_SOURCE_DIR}/Thirdparty DESTINATION ${INSTALL_DIR}/include FILES_MATCHING PATTERN "*.h")

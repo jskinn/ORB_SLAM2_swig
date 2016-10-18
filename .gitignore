@@ -1,7 +1,5 @@
 *.project
 *.mk
-
-Examples
 build
 bin
 lib

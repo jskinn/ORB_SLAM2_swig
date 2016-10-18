@@ -60,9 +60,6 @@ public:
 public:
     // Default constructor, the system will need to have StartUp called to start the system.
     System(const eSensor sensor);
-
-    // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
-    System(const std::string &strVocFile, const std::string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true);
     
     // Destructor, clean up the managed memory
     virtual ~System();

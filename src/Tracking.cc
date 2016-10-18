@@ -86,6 +86,7 @@ Tracking::Tracking(std::shared_ptr<System> pSys, std::shared_ptr<ORBVocabulary> 
     mMinFrames = 0;
     mMaxFrames = fps;
 
+#ifdef DEBUG_MESSAGE
     cout << endl << "Camera Parameters: " << endl;
     cout << "- fx: " << fx << endl;
     cout << "- fy: " << fy << endl;
@@ -98,15 +99,17 @@ Tracking::Tracking(std::shared_ptr<System> pSys, std::shared_ptr<ORBVocabulary> 
     cout << "- p1: " << DistCoef.at<float>(2) << endl;
     cout << "- p2: " << DistCoef.at<float>(3) << endl;
     cout << "- fps: " << fps << endl;
-
+#endif //DEBUG_MESSAGE
 
     int nRGB = fSettings["Camera.RGB"];
     mbRGB = nRGB;
 
+#ifdef DEBUG_MESSAGE
     if(mbRGB)
         cout << "- color order: RGB (ignored if grayscale)" << endl;
     else
         cout << "- color order: BGR (ignored if grayscale)" << endl;
+#endif //DEBUG_MESSAGE
 
     // Load ORB parameters
 
@@ -134,7 +137,9 @@ Tracking::Tracking(std::shared_ptr<System> pSys, std::shared_ptr<ORBVocabulary> 
     if(sensor==System::STEREO || sensor==System::RGBD)
     {
         mThDepth = mbf*(float)fSettings["ThDepth"]/fx;
+#ifdef DEBUG_MESSAGE
         cout << endl << "Depth Threshold (Close/Far Points): " << mThDepth << endl;
+#endif //DEBUG_MESSAGE
     }
 
     if(sensor==System::RGBD)
@@ -472,7 +477,9 @@ void Tracking::Track()
         {
             if(mpMap->KeyFramesInMap()<=5)
             {
+#ifdef DEBUG_MESSAGE
                 cout << "Track lost soon after initialisation, reseting..." << endl;
+#endif //DEBUG_MESSAGE
                 mpSystem->Reset();
                 return;
             }
@@ -536,7 +543,9 @@ void Tracking::StereoInitialization()
             }
         }
 
+#ifdef DEBUG_MESSAGE
         cout << "New map created with " << mpMap->MapPointsInMap() << " points" << endl;
+#endif //DEBUG_MESSAGE
 
         mpLocalMapper->InsertKeyFrame(pKFini);
 
@@ -678,7 +687,9 @@ void Tracking::CreateInitialMapMonocular()
     pKFcur->UpdateConnections();
 
     // Bundle Adjustment
+#ifdef DEBUG_MESSAGE
     cout << "New Map created with " << mpMap->MapPointsInMap() << " points" << endl;
+#endif //DEBUG_MESSAGE
 
     Optimizer::GlobalBundleAdjustemnt(mpMap,20);
 
@@ -688,7 +699,9 @@ void Tracking::CreateInitialMapMonocular()
 
     if(medianDepth<0 || pKFcur->TrackedMapPoints(1)<100)
     {
+#ifdef DEBUG_MESSAGE
         cout << "Wrong initialization, reseting..." << endl;
+#endif //DEBUG_MESSAGE
         Reset();
         return;
     }
@@ -1515,24 +1528,38 @@ void Tracking::Reset()
 {
     mpViewer->RequestStop();
 
+#ifdef DEBUG_MESSAGE
     cout << "System Reseting" << endl;
+#endif //DEBUG_MESSAGE
     while(!mpViewer->isStopped())
         usleep(3000);
 
     // Reset Local Mapping
+#ifdef DEBUG_MESSAGE
     cout << "Reseting Local Mapper...";
+#endif //DEBUG_MESSAGE
     mpLocalMapper->RequestReset();
+#ifdef DEBUG_MESSAGE
     cout << " done" << endl;
+#endif //DEBUG_MESSAGE
 
     // Reset Loop Closing
+#ifdef DEBUG_MESSAGE
     cout << "Reseting Loop Closing...";
+#endif //DEBUG_MESSAGE
     mpLoopClosing->RequestReset();
+#ifdef DEBUG_MESSAGE
     cout << " done" << endl;
+#endif //DEBUG_MESSAGE
 
     // Clear BoW Database
+#ifdef DEBUG_MESSAGE
     cout << "Reseting Database...";
+#endif //DEBUG_MESSAGE
     mpKeyFrameDB->clear();
+#ifdef DEBUG_MESSAGE
     cout << " done" << endl;
+#endif //DEBUG_MESSAGE
 
     // Clear Map (this erase MapPoints and KeyFrames)
     mpMap->clear();
