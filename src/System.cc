@@ -39,7 +39,7 @@ System::System(const eSensor sensor):
 
 System::~System()
 {
-    if (mptLocalMapping->joinable())
+    if (mbIsRunning)
     {
         // This is for safety. Really, call Shutdown before this.
         Shutdown();
@@ -94,6 +94,7 @@ bool System::StartUp(const std::string &strVocFile, const std::string &strSettin
         std::cerr << "Wrong path to vocabulary. " << std::endl;
         std::cerr << "Falied to open at: " << strVocFile << std::endl;
 #endif //DEBUG_MESSAGE
+        mpVocabulary = nullptr;
         return false;
     }
 #ifdef DEBUG_MESSAGE
@@ -333,13 +334,13 @@ void System::Shutdown()
     }
     
     // Blocking wait for threads to stop.
-    if (mptLocalMapping->joinable()) {
+    if (mptLocalMapping && mptLocalMapping->joinable()) {
         mptLocalMapping->join();
     }
-    if (mptLoopClosing->joinable()) {
+    if (mptLoopClosing && mptLoopClosing->joinable()) {
         mptLoopClosing->join();
     }
-    if (mptViewer->joinable()) {
+    if (mptViewer && mptViewer->joinable()) {
         mptViewer->join();
     }
 

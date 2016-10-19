@@ -31,8 +31,9 @@ LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 find_package(OpenCV 2.4.3 REQUIRED)
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
+#find_package(GTest, REQUIRED)
 
-# Version numbers, 
+# Version numbers, so that the generated .so is numbered and linked correctly.
 set(ORBSLAM_VERSION_MAJOR 1)
 set(ORBSLAM_VERSION_MINOR 0)
 set(ORBSLAM_VERSION_PATCH 0)
@@ -43,6 +44,7 @@ ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
+#${GTEST_INCLUDE_DIRS}
 )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
@@ -110,6 +112,19 @@ add_executable(mono_kitti
 Examples/Monocular/mono_kitti.cc)
 target_link_libraries(mono_kitti ${PROJECT_NAME})
 
+# Unit tests, because it keeps segfaulting. really now.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/tests/bin)
+#enable_testing()
+set(PROJECT_TEST_NAME ${PROJECT_NAME}_test)
+add_executable(${PROJECT_TEST_NAME}
+    tests/src/TestSystem.cpp
+)
+target_link_libraries(${PROJECT_TEST_NAME} ${PROJECT_NAME})
+#target_link_libraries(${PROJECT_TEST_NAME}
+    #${GTEST_LIBS_DIR}/libgtest.a
+    #${GTEST_LIBS_DIR}/libgtest_main.a
+#)
+#add_test(test1 ${PROJECT_TEST_NAME})
 
 
 # installation of the library
