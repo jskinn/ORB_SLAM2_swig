@@ -135,7 +135,7 @@ target_link_libraries(${PROJECT_TEST_NAME}
 )
 
 # Specify the tests
-add_test(test1 ${PROJECT_SOURCE_DIR}/tests/bin/${PROJECT_TEST_NAME})
+add_test(NAME integration_tests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${PROJECT_TEST_NAME})
 
 
 # ---------------
