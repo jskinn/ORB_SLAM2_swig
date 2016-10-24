@@ -37,8 +37,8 @@ namespace ORB_SLAM2
 
 LoopClosing::LoopClosing(std::shared_ptr<Map> pMap, std::shared_ptr<KeyFrameDatabase> pDB, std::shared_ptr<ORBVocabulary> pVoc, const bool bFixScale):
     mbResetRequested(false), mbFinishRequested(false), mbFinished(true), mpMap(pMap),
-    mpKeyFrameDB(pDB), mpORBVocabulary(pVoc), mLastLoopKFid(0), mbRunningGBA(false), mbFinishedGBA(true),
-    mbStopGBA(false), mbFixScale(bFixScale)
+    mpKeyFrameDB(pDB), mpORBVocabulary(pVoc), mpMatchedKF(nullptr), mLastLoopKFid(0), mbRunningGBA(false), mbFinishedGBA(true),
+    mbStopGBA(false), mpThreadGBA(nullptr), mbFixScale(bFixScale), mnFullBAIdx(0)
 {
     mnCovisibilityConsistencyTh = 3;
     mpMatchedKF = nullptr;
@@ -413,13 +413,16 @@ void LoopClosing::CorrectLoop()
     // If a Global Bundle Adjustment is running, abort it
     if(isRunningGBA())
     {
+        unique_lock<mutex> lock(mMutexGBA);
         mbStopGBA = true;
 
-        while(!isFinishedGBA())
-            usleep(5000);
+        mnFullBAIdx++;
 
-        mpThreadGBA->join();
-        mpThreadGBA = nullptr;
+        if(mpThreadGBA)
+        {
+            mpThreadGBA->join();
+            mpThreadGBA = nullptr;
+        }
     }
 
     // Wait until Local Mapping has effectively stopped
@@ -650,7 +653,8 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
     cout << "Starting Global Bundle Adjustment" << endl;
 #endif //DEBUG_MESSAGE
 
-    Optimizer::GlobalBundleAdjustemnt(mpMap,20,&mbStopGBA,nLoopKF,false);
+    int idx =  mnFullBAIdx;
+    Optimizer::GlobalBundleAdjustemnt(mpMap,10,&mbStopGBA,nLoopKF,false);
 
     // Update all MapPoints and KeyFrames
     // Local Mapping was active during BA, that means that there might be new keyframes
@@ -658,7 +662,8 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
     // We need to propagate the correction through the spanning tree
     {
         unique_lock<mutex> lock(mMutexGBA);
-
+        if(idx!=mnFullBAIdx)
+            return;
 
         if(!mbStopGBA)
         {
