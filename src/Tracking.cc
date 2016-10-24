@@ -127,12 +127,14 @@ Tracking::Tracking(std::shared_ptr<System> pSys, std::shared_ptr<ORBVocabulary> 
     if(sensor==System::MONOCULAR)
         mpIniORBextractor = std::make_shared<ORBextractor>(2*nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 
+#ifdef DEBUG_MESSAGE
     cout << endl  << "ORB Extractor Parameters: " << endl;
     cout << "- Number of Features: " << nFeatures << endl;
     cout << "- Scale Levels: " << nLevels << endl;
     cout << "- Scale Factor: " << fScaleFactor << endl;
     cout << "- Initial Fast Threshold: " << fIniThFAST << endl;
     cout << "- Minimum Fast Threshold: " << fMinThFAST << endl;
+#endif //DEBUG_MESSAGE
 
     if(sensor==System::STEREO || sensor==System::RGBD)
     {
