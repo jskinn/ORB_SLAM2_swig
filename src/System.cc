@@ -172,7 +172,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
             mpLocalMapper->RequestStop();
 
             // Wait until Local Mapping has effectively stopped
-            while(!mpLocalMapper->isStopped())
+            while(!mpLocalMapper->isStopped() && !mpLocalMapper->isFinished())
             {
                 usleep(1000);
             }
@@ -219,7 +219,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
             mpLocalMapper->RequestStop();
 
             // Wait until Local Mapping has effectively stopped
-            while(!mpLocalMapper->isStopped())
+            while(!mpLocalMapper->isStopped() && !mpLocalMapper->isFinished())
             {
                 usleep(1000);
             }
@@ -269,7 +269,7 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
             mpLocalMapper->RequestStop();
 
             // Wait until Local Mapping has effectively stopped
-            while(!mpLocalMapper->isStopped())
+            while(!mpLocalMapper->isStopped() && !mpLocalMapper->isFinished())
             {
                 usleep(1000);
             }

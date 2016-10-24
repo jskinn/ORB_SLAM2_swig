@@ -426,7 +426,7 @@ void LoopClosing::CorrectLoop()
     }
 
     // Wait until Local Mapping has effectively stopped
-    while(!mpLocalMapper->isStopped())
+    while(!mpLocalMapper->isStopped() && !mpLocalMapper->isFinished())
     {
         usleep(1000);
     }

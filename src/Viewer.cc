@@ -154,7 +154,7 @@ void Viewer::Run()
 
         if(Stop())
         {
-            while(isStopped())
+            while(isStopped() && !CheckFinish())
             {
                 usleep(3000);
             }
@@ -207,8 +207,9 @@ bool Viewer::isStopped()
 
 bool Viewer::Stop()
 {
-    unique_lock<mutex> lock(mMutexStop);
-    unique_lock<mutex> lock2(mMutexFinish);
+    unique_lock<mutex> lock(mMutexStop, std::defer_lock);
+    unique_lock<mutex> lock2(mMutexFinish, std::defer_lock);
+    std::lock(lock, lock2);
 
     if(mbFinishRequested)
         return false;
