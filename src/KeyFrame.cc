@@ -215,22 +215,22 @@ void KeyFrame::AddMapPoint(std::shared_ptr<MapPoint> pMP, const size_t &idx)
 
 void KeyFrame::EraseMapPointMatch(const size_t &idx)
 {
-    unique_lock<mutex> lock(mMutexFeatures);
-    mvpMapPoints[idx]=nullptr;
+    // No need to lock, done by the delegated function
+    this->ReplaceMapPointMatch(idx, nullptr);
 }
 
 void KeyFrame::EraseMapPointMatch(std::shared_ptr<MapPoint> pMP)
 {
-    // TODO: Shoudl this lock the mutex?
     int idx = pMP->GetIndexInKeyFrame(shared_from_this());
     if(idx>=0)
-        mvpMapPoints[idx]=nullptr;  // TODO: Both this and the one above could delegate to ReplaceMapPointMatch(idx, nullptr)
+        // No need to lock, it's done in the delegated function
+        this->ReplaceMapPointMatch(idx, nullptr);
 }
 
 
 void KeyFrame::ReplaceMapPointMatch(const size_t &idx, std::shared_ptr<MapPoint> pMP)
 {
-    // TODO: Should this lock the mutex?
+    unique_lock<mutex> lock(mMutexFeatures);
     mvpMapPoints[idx]=pMP;
 }
 
