@@ -514,4 +514,12 @@ const std::shared_ptr<Tracking> System::GetTracking() const
     return mpTracker;
 }
 
+int System::GetTrackingState() const
+{
+    if (mpTracker) {
+        return static_cast<int>(mpTracker->mState);
+    }
+    return static_cast<int>(Tracking::eTrackingState::SYSTEM_NOT_READY);
+}
+
 } //namespace ORB_SLAM

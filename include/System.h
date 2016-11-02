@@ -119,6 +119,9 @@ public:
 
     vector<std::shared_ptr<KeyFrame>> GetKeyFrames() const;
     const std::shared_ptr<Tracking> GetTracking() const;
+    
+    // Get the tracking state after each frame. Call this after 
+    int GetTrackingState() const;
 
     // TODO: Save/Load functions
     // SaveMap(const std::string &filename);
