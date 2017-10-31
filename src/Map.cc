@@ -25,11 +25,11 @@
 namespace ORB_SLAM2
 {
 
-Map::Map():mnMaxKFid(0)
+Map::Map():mnMaxKFid(0),mnBigChangeIdx(0)
 {
 }
 
-void Map::AddKeyFrame(std::shared_ptr<KeyFrame> pKF)
+void Map::AddKeyFrame(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutexMap);
     mspKeyFrames.insert(pKF);
@@ -37,13 +37,13 @@ void Map::AddKeyFrame(std::shared_ptr<KeyFrame> pKF)
         mnMaxKFid=pKF->mnId;
 }
 
-void Map::AddMapPoint(std::shared_ptr<MapPoint> pMP)
+void Map::AddMapPoint(MapPoint *pMP)
 {
     unique_lock<mutex> lock(mMutexMap);
     mspMapPoints.insert(pMP);
 }
 
-void Map::EraseMapPoint(std::shared_ptr<MapPoint> pMP)
+void Map::EraseMapPoint(MapPoint *pMP)
 {
     unique_lock<mutex> lock(mMutexMap);
     mspMapPoints.erase(pMP);
@@ -52,7 +52,7 @@ void Map::EraseMapPoint(std::shared_ptr<MapPoint> pMP)
     // Delete the MapPoint
 }
 
-void Map::EraseKeyFrame(std::shared_ptr<KeyFrame> pKF)
+void Map::EraseKeyFrame(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutexMap);
     mspKeyFrames.erase(pKF);
@@ -61,22 +61,34 @@ void Map::EraseKeyFrame(std::shared_ptr<KeyFrame> pKF)
     // Delete the MapPoint
 }
 
-void Map::SetReferenceMapPoints(const vector<std::shared_ptr<MapPoint> > &vpMPs)
+void Map::SetReferenceMapPoints(const vector<MapPoint *> &vpMPs)
 {
     unique_lock<mutex> lock(mMutexMap);
     mvpReferenceMapPoints = vpMPs;
 }
 
-vector<std::shared_ptr<KeyFrame>> Map::GetAllKeyFrames()
+void Map::InformNewBigChange()
 {
     unique_lock<mutex> lock(mMutexMap);
-    return vector<std::shared_ptr<KeyFrame>>(mspKeyFrames.begin(),mspKeyFrames.end());
+    mnBigChangeIdx++;
 }
 
-vector<std::shared_ptr<MapPoint>> Map::GetAllMapPoints()
+int Map::GetLastBigChangeIdx()
 {
     unique_lock<mutex> lock(mMutexMap);
-    return vector<std::shared_ptr<MapPoint>>(mspMapPoints.begin(),mspMapPoints.end());
+    return mnBigChangeIdx;
+}
+
+vector<KeyFrame*> Map::GetAllKeyFrames()
+{
+    unique_lock<mutex> lock(mMutexMap);
+    return vector<KeyFrame*>(mspKeyFrames.begin(),mspKeyFrames.end());
+}
+
+vector<MapPoint*> Map::GetAllMapPoints()
+{
+    unique_lock<mutex> lock(mMutexMap);
+    return vector<MapPoint*>(mspMapPoints.begin(),mspMapPoints.end());
 }
 
 long unsigned int Map::MapPointsInMap()
@@ -91,7 +103,7 @@ long unsigned int Map::KeyFramesInMap()
     return mspKeyFrames.size();
 }
 
-vector<std::shared_ptr<MapPoint>> Map::GetReferenceMapPoints()
+vector<MapPoint*> Map::GetReferenceMapPoints()
 {
     unique_lock<mutex> lock(mMutexMap);
     return mvpReferenceMapPoints;
@@ -105,11 +117,11 @@ long unsigned int Map::GetMaxKFid()
 
 void Map::clear()
 {
-    /*for(set<std::shared_ptr<MapPoint>>::iterator sit=mspMapPoints.begin(), send=mspMapPoints.end(); sit!=send; sit++)
-        (*sit).reset();
+    for(set<MapPoint*>::iterator sit=mspMapPoints.begin(), send=mspMapPoints.end(); sit!=send; sit++)
+        delete *sit;
 
-    for(set<std::shared_ptr<KeyFrame>>::iterator sit=mspKeyFrames.begin(), send=mspKeyFrames.end(); sit!=send; sit++)
-        (*sit).reset();*/
+    for(set<KeyFrame*>::iterator sit=mspKeyFrames.begin(), send=mspKeyFrames.end(); sit!=send; sit++)
+        delete *sit;
 
     mspMapPoints.clear();
     mspKeyFrames.clear();

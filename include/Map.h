@@ -25,7 +25,6 @@
 #include "KeyFrame.h"
 #include <set>
 
-#include <memory>
 #include <mutex>
 
 
@@ -41,15 +40,17 @@ class Map
 public:
     Map();
 
-    void AddKeyFrame(std::shared_ptr<KeyFrame> pKF);
-    void AddMapPoint(std::shared_ptr<MapPoint> pMP);
-    void EraseMapPoint(std::shared_ptr<MapPoint> pMP);
-    void EraseKeyFrame(std::shared_ptr<KeyFrame> pKF);
-    void SetReferenceMapPoints(const std::vector<std::shared_ptr<MapPoint>> &vpMPs);
+    void AddKeyFrame(KeyFrame* pKF);
+    void AddMapPoint(MapPoint* pMP);
+    void EraseMapPoint(MapPoint* pMP);
+    void EraseKeyFrame(KeyFrame* pKF);
+    void SetReferenceMapPoints(const std::vector<MapPoint*> &vpMPs);
+    void InformNewBigChange();
+    int GetLastBigChangeIdx();
 
-    std::vector<std::shared_ptr<KeyFrame>> GetAllKeyFrames();
-    std::vector<std::shared_ptr<MapPoint>> GetAllMapPoints();
-    std::vector<std::shared_ptr<MapPoint>> GetReferenceMapPoints();
+    std::vector<KeyFrame*> GetAllKeyFrames();
+    std::vector<MapPoint*> GetAllMapPoints();
+    std::vector<MapPoint*> GetReferenceMapPoints();
 
     long unsigned int MapPointsInMap();
     long unsigned  KeyFramesInMap();
@@ -58,7 +59,7 @@ public:
 
     void clear();
 
-    vector<std::shared_ptr<KeyFrame>> mvpKeyFrameOrigins;
+    vector<KeyFrame*> mvpKeyFrameOrigins;
 
     std::mutex mMutexMapUpdate;
 
@@ -66,12 +67,15 @@ public:
     std::mutex mMutexPointCreation;
 
 protected:
-    std::set<std::shared_ptr<MapPoint>> mspMapPoints;
-    std::set<std::shared_ptr<KeyFrame>> mspKeyFrames;
+    std::set<MapPoint*> mspMapPoints;
+    std::set<KeyFrame*> mspKeyFrames;
 
-    std::vector<std::shared_ptr<MapPoint>> mvpReferenceMapPoints;
+    std::vector<MapPoint*> mvpReferenceMapPoints;
 
     long unsigned int mnMaxKFid;
+
+    // Index related to a big change in the map (loop closure, global BA)
+    int mnBigChangeIdx;
 
     std::mutex mMutexMap;
 };

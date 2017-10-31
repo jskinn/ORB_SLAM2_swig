@@ -21,7 +21,6 @@
 #ifndef KEYFRAMEDATABASE_H
 #define KEYFRAMEDATABASE_H
 
-#include <memory>
 #include <vector>
 #include <list>
 #include <set>
@@ -44,27 +43,27 @@ class KeyFrameDatabase
 {
 public:
 
-    KeyFrameDatabase(const std::shared_ptr<ORBVocabulary> voc);
+    KeyFrameDatabase(const ORBVocabulary &voc);
 
-   void add(std::shared_ptr<KeyFrame> pKF);
+   void add(KeyFrame* pKF);
 
-   void erase(std::shared_ptr<KeyFrame> pKF);
+   void erase(KeyFrame* pKF);
 
    void clear();
 
    // Loop Detection
-   std::vector<std::shared_ptr<KeyFrame>> DetectLoopCandidates(std::shared_ptr<KeyFrame> pKF, float minScore);
+   std::vector<KeyFrame *> DetectLoopCandidates(KeyFrame* pKF, float minScore);
 
    // Relocalization
-   std::vector<std::shared_ptr<KeyFrame>> DetectRelocalizationCandidates(const Frame& F);
+   std::vector<KeyFrame*> DetectRelocalizationCandidates(Frame* F);
 
 protected:
 
   // Associated vocabulary
-  const std::shared_ptr<ORBVocabulary> mpVoc;
+  const ORBVocabulary* mpVoc;
 
   // Inverted file
-  std::vector<std::list<std::shared_ptr<KeyFrame>>> mvInvertedFile;
+  std::vector<list<KeyFrame*> > mvInvertedFile;
 
   // Mutex
   std::mutex mMutex;

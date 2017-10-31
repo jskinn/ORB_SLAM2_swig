@@ -25,7 +25,6 @@
 #include"Frame.h"
 #include"Map.h"
 
-#include <memory>
 #include<opencv2/core/core.hpp>
 #include<mutex>
 
@@ -37,32 +36,32 @@ class Map;
 class Frame;
 
 
-class MapPoint : public std::enable_shared_from_this<MapPoint>
+class MapPoint
 {
 public:
-    MapPoint(const cv::Mat &Pos, std::shared_ptr<KeyFrame> pRefKF, std::shared_ptr<Map> pMap);
-    MapPoint(const cv::Mat &Pos,  std::shared_ptr<Map> pMap, const Frame& pFrame, const int &idxF);
+    MapPoint(const cv::Mat &Pos, KeyFrame* pRefKF, Map* pMap);
+    MapPoint(const cv::Mat &Pos,  Map* pMap, Frame* pFrame, const int &idxF);
 
     void SetWorldPos(const cv::Mat &Pos);
     cv::Mat GetWorldPos();
 
     cv::Mat GetNormal();
-    std::shared_ptr<KeyFrame> GetReferenceKeyFrame();
+    KeyFrame* GetReferenceKeyFrame();
 
-    std::map<std::shared_ptr<KeyFrame>,size_t> GetObservations();
+    std::map<KeyFrame*,size_t> GetObservations();
     int Observations();
 
-    void AddObservation(std::shared_ptr<KeyFrame> pKF,size_t idx);
-    void EraseObservation(std::shared_ptr<KeyFrame> pKF);
+    void AddObservation(KeyFrame* pKF,size_t idx);
+    void EraseObservation(KeyFrame* pKF);
 
-    int GetIndexInKeyFrame(std::shared_ptr<KeyFrame> pKF);
-    bool IsInKeyFrame(std::shared_ptr<KeyFrame> pKF);
+    int GetIndexInKeyFrame(KeyFrame* pKF);
+    bool IsInKeyFrame(KeyFrame* pKF);
 
     void SetBadFlag();
     bool isBad();
 
-    void Replace(std::shared_ptr<MapPoint> pMP);    
-    std::shared_ptr<MapPoint> GetReplaced();
+    void Replace(MapPoint* pMP);    
+    MapPoint* GetReplaced();
 
     void IncreaseVisible(int n=1);
     void IncreaseFound(int n=1);
@@ -79,8 +78,8 @@ public:
 
     float GetMinDistanceInvariance();
     float GetMaxDistanceInvariance();
-    int PredictScale(const float &currentDist, const KeyFrame& pKF);
-    int PredictScale(const float &currentDist, const Frame& pF);
+    int PredictScale(const float &currentDist, KeyFrame*pKF);
+    int PredictScale(const float &currentDist, Frame* pF);
 
 public:
     long unsigned int mnId;
@@ -119,7 +118,7 @@ protected:
      cv::Mat mWorldPos;
 
      // Keyframes observing the point and associated index in keyframe
-     std::map<std::shared_ptr<KeyFrame>,size_t> mObservations;
+     std::map<KeyFrame*,size_t> mObservations;
 
      // Mean viewing direction
      cv::Mat mNormalVector;
@@ -128,7 +127,7 @@ protected:
      cv::Mat mDescriptor;
 
      // Reference KeyFrame
-     std::shared_ptr<KeyFrame> mpRefKF;
+     KeyFrame* mpRefKF;
 
      // Tracking counters
      int mnVisible;
@@ -136,13 +135,13 @@ protected:
 
      // Bad flag (we do not currently erase MapPoint from memory)
      bool mbBad;
-     std::shared_ptr<MapPoint> mpReplaced;
+     MapPoint* mpReplaced;
 
      // Scale invariance distances
      float mfMinDistance;
      float mfMaxDistance;
 
-     std::shared_ptr<Map> mpMap;
+     Map* mpMap;
 
      std::mutex mMutexPos;
      std::mutex mMutexFeatures;

@@ -29,7 +29,6 @@
 
 #include "KeyFrameDatabase.h"
 
-#include <memory>
 #include <thread>
 #include <mutex>
 #include "Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
@@ -46,22 +45,22 @@ class LoopClosing
 {
 public:
 
-    typedef pair<set<std::shared_ptr<KeyFrame>>,int> ConsistentGroup;    
-    typedef map<std::shared_ptr<KeyFrame>,g2o::Sim3,std::less<std::shared_ptr<KeyFrame>>,
-        Eigen::aligned_allocator<std::pair<const std::shared_ptr<KeyFrame>, g2o::Sim3> > > KeyFrameAndPose;
+    typedef pair<set<KeyFrame*>,int> ConsistentGroup;    
+    typedef map<KeyFrame*,g2o::Sim3,std::less<KeyFrame*>,
+        Eigen::aligned_allocator<std::pair<const KeyFrame*, g2o::Sim3> > > KeyFrameAndPose;
 
 public:
 
-    LoopClosing(std::shared_ptr<Map> pMap, std::shared_ptr<KeyFrameDatabase> pDB, std::shared_ptr<ORBVocabulary> pVoc,const bool bFixScale);
+    LoopClosing(Map* pMap, KeyFrameDatabase* pDB, ORBVocabulary* pVoc,const bool bFixScale);
 
-    void SetTracker(std::shared_ptr<Tracking> pTracker);
+    void SetTracker(Tracking* pTracker);
 
-    void SetLocalMapper(std::shared_ptr<LocalMapping> pLocalMapper);
+    void SetLocalMapper(LocalMapping* pLocalMapper);
 
     // Main function
     void Run();
 
-    void InsertKeyFrame(std::shared_ptr<KeyFrame> pKF);
+    void InsertKeyFrame(KeyFrame *pKF);
 
     void RequestReset();
 
@@ -80,6 +79,8 @@ public:
     void RequestFinish();
 
     bool isFinished();
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 protected:
 
@@ -103,15 +104,15 @@ protected:
     bool mbFinished;
     std::mutex mMutexFinish;
 
-    std::shared_ptr<Map> mpMap;
-    std::shared_ptr<Tracking> mpTracker;
+    Map* mpMap;
+    Tracking* mpTracker;
 
-    std::shared_ptr<KeyFrameDatabase> mpKeyFrameDB;
-    std::shared_ptr<ORBVocabulary> mpORBVocabulary;
+    KeyFrameDatabase* mpKeyFrameDB;
+    ORBVocabulary* mpORBVocabulary;
 
-    std::shared_ptr<LocalMapping> mpLocalMapper;
+    LocalMapping *mpLocalMapper;
 
-    std::list<std::shared_ptr<KeyFrame>> mlpLoopKeyFrameQueue;
+    std::list<KeyFrame*> mlpLoopKeyFrameQueue;
 
     std::mutex mMutexLoopQueue;
 
@@ -119,13 +120,13 @@ protected:
     float mnCovisibilityConsistencyTh;
 
     // Loop detector variables
-    std::shared_ptr<KeyFrame> mpCurrentKF;
-    std::shared_ptr<KeyFrame> mpMatchedKF;
+    KeyFrame* mpCurrentKF;
+    KeyFrame* mpMatchedKF;
     std::vector<ConsistentGroup> mvConsistentGroups;
-    std::vector<std::shared_ptr<KeyFrame>> mvpEnoughConsistentCandidates;
-    std::vector<std::shared_ptr<KeyFrame>> mvpCurrentConnectedKFs;
-    std::vector<std::shared_ptr<MapPoint>> mvpCurrentMatchedPoints;
-    std::vector<std::shared_ptr<MapPoint>> mvpLoopMapPoints;
+    std::vector<KeyFrame*> mvpEnoughConsistentCandidates;
+    std::vector<KeyFrame*> mvpCurrentConnectedKFs;
+    std::vector<MapPoint*> mvpCurrentMatchedPoints;
+    std::vector<MapPoint*> mvpLoopMapPoints;
     cv::Mat mScw;
     g2o::Sim3 mg2oScw;
 
@@ -136,7 +137,7 @@ protected:
     bool mbFinishedGBA;
     bool mbStopGBA;
     std::mutex mMutexGBA;
-    std::shared_ptr<std::thread> mpThreadGBA;
+    std::thread* mpThreadGBA;
 
     // Fix scale in the stereo/RGB-D case
     bool mbFixScale;

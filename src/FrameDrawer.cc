@@ -29,7 +29,7 @@
 namespace ORB_SLAM2
 {
 
-FrameDrawer::FrameDrawer(std::shared_ptr<Map> pMap):mpMap(pMap)
+FrameDrawer::FrameDrawer(Map* pMap):mpMap(pMap)
 {
     mState=Tracking::SYSTEM_NOT_READY;
     mIm = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
@@ -91,7 +91,8 @@ cv::Mat FrameDrawer::DrawFrame()
         mnTracked=0;
         mnTrackedVO=0;
         const float r = 5;
-        for(int i=0;i<N;i++)
+        const int n = vCurrentKeys.size();
+        for(int i=0;i<n;i++)
         {
             if(vbVO[i] || vbMap[i])
             {
@@ -163,7 +164,7 @@ void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
 
 }
 
-void FrameDrawer::Update(std::shared_ptr<Tracking> pTracker)
+void FrameDrawer::Update(Tracking *pTracker)
 {
     unique_lock<mutex> lock(mMutex);
     pTracker->mImGray.copyTo(mIm);
@@ -183,7 +184,7 @@ void FrameDrawer::Update(std::shared_ptr<Tracking> pTracker)
     {
         for(int i=0;i<N;i++)
         {
-            std::shared_ptr<MapPoint> pMP = pTracker->mCurrentFrame.mvpMapPoints[i];
+            MapPoint* pMP = pTracker->mCurrentFrame.mvpMapPoints[i];
             if(pMP)
             {
                 if(!pTracker->mCurrentFrame.mvbOutlier[i])

@@ -42,7 +42,7 @@ ORBmatcher::ORBmatcher(float nnratio, bool checkOri): mfNNratio(nnratio), mbChec
 {
 }
 
-int ORBmatcher::SearchByProjection(Frame &F, const vector<std::shared_ptr<MapPoint>> &vpMapPoints, const float th)
+int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoints, const float th)
 {
     int nmatches=0;
 
@@ -50,7 +50,7 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<std::shared_ptr<MapPoi
 
     for(size_t iMP=0; iMP<vpMapPoints.size(); iMP++)
     {
-        std::shared_ptr<MapPoint> pMP = vpMapPoints[iMP];
+        MapPoint* pMP = vpMapPoints[iMP];
         if(!pMP->mbTrackInView)
             continue;
 
@@ -137,7 +137,7 @@ float ORBmatcher::RadiusByViewingCos(const float &viewCos)
 }
 
 
-bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoint &kp2,const cv::Mat &F12,const std::shared_ptr<KeyFrame> pKF2)
+bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoint &kp2,const cv::Mat &F12,const KeyFrame* pKF2)
 {
     // Epipolar line in second image l = x1'F12 = [a b c]
     const float a = kp1.pt.x*F12.at<float>(0,0)+kp1.pt.y*F12.at<float>(1,0)+F12.at<float>(2,0);
@@ -156,11 +156,11 @@ bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoin
     return dsqr<3.84*pKF2->mvLevelSigma2[kp2.octave];
 }
 
-int ORBmatcher::SearchByBoW(std::shared_ptr<KeyFrame> pKF,Frame &F, vector<std::shared_ptr<MapPoint>> &vpMapPointMatches)
+int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPointMatches)
 {
-    const vector<std::shared_ptr<MapPoint>> vpMapPointsKF = pKF->GetMapPointMatches();
+    const vector<MapPoint*> vpMapPointsKF = pKF->GetMapPointMatches();
 
-    vpMapPointMatches = vector<std::shared_ptr<MapPoint>>(F.N,nullptr);
+    vpMapPointMatches = vector<MapPoint*>(F.N,static_cast<MapPoint*>(NULL));
 
     const DBoW2::FeatureVector &vFeatVecKF = pKF->mFeatVec;
 
@@ -188,7 +188,7 @@ int ORBmatcher::SearchByBoW(std::shared_ptr<KeyFrame> pKF,Frame &F, vector<std::
             {
                 const unsigned int realIdxKF = vIndicesKF[iKF];
 
-                std::shared_ptr<MapPoint> pMP = vpMapPointsKF[realIdxKF];
+                MapPoint* pMP = vpMapPointsKF[realIdxKF];
 
                 if(!pMP)
                     continue;
@@ -278,7 +278,7 @@ int ORBmatcher::SearchByBoW(std::shared_ptr<KeyFrame> pKF,Frame &F, vector<std::
                 continue;
             for(size_t j=0, jend=rotHist[i].size(); j<jend; j++)
             {
-                vpMapPointMatches[rotHist[i][j]]=nullptr;
+                vpMapPointMatches[rotHist[i][j]]=static_cast<MapPoint*>(NULL);
                 nmatches--;
             }
         }
@@ -287,7 +287,7 @@ int ORBmatcher::SearchByBoW(std::shared_ptr<KeyFrame> pKF,Frame &F, vector<std::
     return nmatches;
 }
 
-int ORBmatcher::SearchByProjection(std::shared_ptr<KeyFrame> pKF, cv::Mat Scw, const vector<std::shared_ptr<MapPoint>> &vpPoints, vector<std::shared_ptr<MapPoint>> &vpMatched, int th)
+int ORBmatcher::SearchByProjection(KeyFrame* pKF, cv::Mat Scw, const vector<MapPoint*> &vpPoints, vector<MapPoint*> &vpMatched, int th)
 {
     // Get Calibration Parameters for later projection
     const float &fx = pKF->fx;
@@ -303,15 +303,15 @@ int ORBmatcher::SearchByProjection(std::shared_ptr<KeyFrame> pKF, cv::Mat Scw, c
     cv::Mat Ow = -Rcw.t()*tcw;
 
     // Set of MapPoints already found in the KeyFrame
-    set<std::shared_ptr<MapPoint>> spAlreadyFound(vpMatched.begin(), vpMatched.end());
-    spAlreadyFound.erase(nullptr);
+    set<MapPoint*> spAlreadyFound(vpMatched.begin(), vpMatched.end());
+    spAlreadyFound.erase(static_cast<MapPoint*>(NULL));
 
     int nmatches=0;
 
     // For each Candidate MapPoint Project and Match
     for(int iMP=0, iendMP=vpPoints.size(); iMP<iendMP; iMP++)
     {
-        std::shared_ptr<MapPoint> pMP = vpPoints[iMP];
+        MapPoint* pMP = vpPoints[iMP];
 
         // Discard Bad MapPoints and already found
         if(pMP->isBad() || spAlreadyFound.count(pMP))
@@ -354,7 +354,7 @@ int ORBmatcher::SearchByProjection(std::shared_ptr<KeyFrame> pKF, cv::Mat Scw, c
         if(PO.dot(Pn)<0.5*dist)
             continue;
 
-        int nPredictedLevel = pMP->PredictScale(dist,*pKF);
+        int nPredictedLevel = pMP->PredictScale(dist,pKF);
 
         // Search in a radius
         const float radius = th*pKF->mvScaleFactors[nPredictedLevel];
@@ -519,19 +519,19 @@ int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f
     return nmatches;
 }
 
-int ORBmatcher::SearchByBoW(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<KeyFrame> pKF2, vector<std::shared_ptr<MapPoint> > &vpMatches12)
+int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &vpMatches12)
 {
     const vector<cv::KeyPoint> &vKeysUn1 = pKF1->mvKeysUn;
     const DBoW2::FeatureVector &vFeatVec1 = pKF1->mFeatVec;
-    const vector<std::shared_ptr<MapPoint>> vpMapPoints1 = pKF1->GetMapPointMatches();
+    const vector<MapPoint*> vpMapPoints1 = pKF1->GetMapPointMatches();
     const cv::Mat &Descriptors1 = pKF1->mDescriptors;
 
     const vector<cv::KeyPoint> &vKeysUn2 = pKF2->mvKeysUn;
     const DBoW2::FeatureVector &vFeatVec2 = pKF2->mFeatVec;
-    const vector<std::shared_ptr<MapPoint>> vpMapPoints2 = pKF2->GetMapPointMatches();
+    const vector<MapPoint*> vpMapPoints2 = pKF2->GetMapPointMatches();
     const cv::Mat &Descriptors2 = pKF2->mDescriptors;
 
-    vpMatches12 = vector<std::shared_ptr<MapPoint>>(vpMapPoints1.size(),nullptr);
+    vpMatches12 = vector<MapPoint*>(vpMapPoints1.size(),static_cast<MapPoint*>(NULL));
     vector<bool> vbMatched2(vpMapPoints2.size(),false);
 
     vector<int> rotHist[HISTO_LENGTH];
@@ -555,7 +555,7 @@ int ORBmatcher::SearchByBoW(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<KeyF
             {
                 const size_t idx1 = f1it->second[i1];
 
-                std::shared_ptr<MapPoint> pMP1 = vpMapPoints1[idx1];
+                MapPoint* pMP1 = vpMapPoints1[idx1];
                 if(!pMP1)
                     continue;
                 if(pMP1->isBad())
@@ -571,7 +571,7 @@ int ORBmatcher::SearchByBoW(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<KeyF
                 {
                     const size_t idx2 = f2it->second[i2];
 
-                    std::shared_ptr<MapPoint> pMP2 = vpMapPoints2[idx2];
+                    MapPoint* pMP2 = vpMapPoints2[idx2];
 
                     if(vbMatched2[idx2] || !pMP2)
                         continue;
@@ -645,7 +645,7 @@ int ORBmatcher::SearchByBoW(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<KeyF
                 continue;
             for(size_t j=0, jend=rotHist[i].size(); j<jend; j++)
             {
-                vpMatches12[rotHist[i][j]]=nullptr;
+                vpMatches12[rotHist[i][j]]=static_cast<MapPoint*>(NULL);
                 nmatches--;
             }
         }
@@ -654,7 +654,7 @@ int ORBmatcher::SearchByBoW(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<KeyF
     return nmatches;
 }
 
-int ORBmatcher::SearchForTriangulation(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<KeyFrame> pKF2, cv::Mat F12,
+int ORBmatcher::SearchForTriangulation(KeyFrame *pKF1, KeyFrame *pKF2, cv::Mat F12,
                                        vector<pair<size_t, size_t> > &vMatchedPairs, const bool bOnlyStereo)
 {    
     const DBoW2::FeatureVector &vFeatVec1 = pKF1->mFeatVec;
@@ -696,7 +696,7 @@ int ORBmatcher::SearchForTriangulation(std::shared_ptr<KeyFrame> pKF1, std::shar
             {
                 const size_t idx1 = f1it->second[i1];
                 
-                std::shared_ptr<MapPoint> pMP1 = pKF1->GetMapPoint(idx1);
+                MapPoint* pMP1 = pKF1->GetMapPoint(idx1);
                 
                 // If there is already a MapPoint skip
                 if(pMP1)
@@ -719,7 +719,7 @@ int ORBmatcher::SearchForTriangulation(std::shared_ptr<KeyFrame> pKF1, std::shar
                 {
                     size_t idx2 = f2it->second[i2];
                     
-                    std::shared_ptr<MapPoint> pMP2 = pKF2->GetMapPoint(idx2);
+                    MapPoint* pMP2 = pKF2->GetMapPoint(idx2);
                     
                     // If we have already matched or there is a MapPoint skip
                     if(vbMatched2[idx2] || pMP2)
@@ -822,7 +822,7 @@ int ORBmatcher::SearchForTriangulation(std::shared_ptr<KeyFrame> pKF1, std::shar
     return nmatches;
 }
 
-int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, const vector<std::shared_ptr<MapPoint> > &vpMapPoints, const float th)
+int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const float th)
 {
     cv::Mat Rcw = pKF->GetRotation();
     cv::Mat tcw = pKF->GetTranslation();
@@ -841,7 +841,7 @@ int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, const vector<std::shared_ptr
 
     for(int i=0; i<nMPs; i++)
     {
-        std::shared_ptr<MapPoint> pMP = vpMapPoints[i];
+        MapPoint* pMP = vpMapPoints[i];
 
         if(!pMP)
             continue;
@@ -884,7 +884,7 @@ int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, const vector<std::shared_ptr
         if(PO.dot(Pn)<0.5*dist3D)
             continue;
 
-        int nPredictedLevel = pMP->PredictScale(dist3D,*pKF);
+        int nPredictedLevel = pMP->PredictScale(dist3D,pKF);
 
         // Search in a radius
         const float radius = th*pKF->mvScaleFactors[nPredictedLevel];
@@ -951,7 +951,7 @@ int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, const vector<std::shared_ptr
         // If there is already a MapPoint replace otherwise add new measurement
         if(bestDist<=TH_LOW)
         {
-            std::shared_ptr<MapPoint> pMPinKF = pKF->GetMapPoint(bestIdx);
+            MapPoint* pMPinKF = pKF->GetMapPoint(bestIdx);
             if(pMPinKF)
             {
                 if(!pMPinKF->isBad())
@@ -974,7 +974,7 @@ int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, const vector<std::shared_ptr
     return nFused;
 }
 
-int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, cv::Mat Scw, const vector<std::shared_ptr<MapPoint> > &vpPoints, float th, vector<std::shared_ptr<MapPoint> > &vpReplacePoint)
+int ORBmatcher::Fuse(KeyFrame *pKF, cv::Mat Scw, const vector<MapPoint *> &vpPoints, float th, vector<MapPoint *> &vpReplacePoint)
 {
     // Get Calibration Parameters for later projection
     const float &fx = pKF->fx;
@@ -990,7 +990,7 @@ int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, cv::Mat Scw, const vector<st
     cv::Mat Ow = -Rcw.t()*tcw;
 
     // Set of MapPoints already found in the KeyFrame
-    const set<std::shared_ptr<MapPoint>> spAlreadyFound = pKF->GetMapPoints();
+    const set<MapPoint*> spAlreadyFound = pKF->GetMapPoints();
 
     int nFused=0;
 
@@ -999,7 +999,7 @@ int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, cv::Mat Scw, const vector<st
     // For each candidate MapPoint project and match
     for(int iMP=0; iMP<nPoints; iMP++)
     {
-        std::shared_ptr<MapPoint> pMP = vpPoints[iMP];
+        MapPoint* pMP = vpPoints[iMP];
 
         // Discard Bad MapPoints and already found
         if(pMP->isBad() || spAlreadyFound.count(pMP))
@@ -1043,7 +1043,7 @@ int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, cv::Mat Scw, const vector<st
             continue;
 
         // Compute predicted scale level
-        const int nPredictedLevel = pMP->PredictScale(dist3D,*pKF);
+        const int nPredictedLevel = pMP->PredictScale(dist3D,pKF);
 
         // Search in a radius
         const float radius = th*pKF->mvScaleFactors[nPredictedLevel];
@@ -1081,7 +1081,7 @@ int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, cv::Mat Scw, const vector<st
         // If there is already a MapPoint replace otherwise add new measurement
         if(bestDist<=TH_LOW)
         {
-            std::shared_ptr<MapPoint> pMPinKF = pKF->GetMapPoint(bestIdx);
+            MapPoint* pMPinKF = pKF->GetMapPoint(bestIdx);
             if(pMPinKF)
             {
                 if(!pMPinKF->isBad())
@@ -1099,7 +1099,7 @@ int ORBmatcher::Fuse(std::shared_ptr<KeyFrame> pKF, cv::Mat Scw, const vector<st
     return nFused;
 }
 
-int ORBmatcher::SearchBySim3(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<KeyFrame> pKF2, vector<std::shared_ptr<MapPoint>> &vpMatches12,
+int ORBmatcher::SearchBySim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint*> &vpMatches12,
                              const float &s12, const cv::Mat &R12, const cv::Mat &t12, const float th)
 {
     const float &fx = pKF1->fx;
@@ -1120,10 +1120,10 @@ int ORBmatcher::SearchBySim3(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<Key
     cv::Mat sR21 = (1.0/s12)*R12.t();
     cv::Mat t21 = -sR21*t12;
 
-    const vector<std::shared_ptr<MapPoint>> vpMapPoints1 = pKF1->GetMapPointMatches();
+    const vector<MapPoint*> vpMapPoints1 = pKF1->GetMapPointMatches();
     const int N1 = vpMapPoints1.size();
 
-    const vector<std::shared_ptr<MapPoint>> vpMapPoints2 = pKF2->GetMapPointMatches();
+    const vector<MapPoint*> vpMapPoints2 = pKF2->GetMapPointMatches();
     const int N2 = vpMapPoints2.size();
 
     vector<bool> vbAlreadyMatched1(N1,false);
@@ -1131,7 +1131,7 @@ int ORBmatcher::SearchBySim3(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<Key
 
     for(int i=0; i<N1; i++)
     {
-        std::shared_ptr<MapPoint> pMP = vpMatches12[i];
+        MapPoint* pMP = vpMatches12[i];
         if(pMP)
         {
             vbAlreadyMatched1[i]=true;
@@ -1147,7 +1147,7 @@ int ORBmatcher::SearchBySim3(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<Key
     // Transform from KF1 to KF2 and search
     for(int i1=0; i1<N1; i1++)
     {
-        std::shared_ptr<MapPoint> pMP = vpMapPoints1[i1];
+        MapPoint* pMP = vpMapPoints1[i1];
 
         if(!pMP || vbAlreadyMatched1[i1])
             continue;
@@ -1183,7 +1183,7 @@ int ORBmatcher::SearchBySim3(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<Key
             continue;
 
         // Compute predicted octave
-        const int nPredictedLevel = pMP->PredictScale(dist3D,*pKF2);
+        const int nPredictedLevel = pMP->PredictScale(dist3D,pKF2);
 
         // Search in a radius
         const float radius = th*pKF2->mvScaleFactors[nPredictedLevel];
@@ -1227,7 +1227,7 @@ int ORBmatcher::SearchBySim3(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<Key
     // Transform from KF2 to KF2 and search
     for(int i2=0; i2<N2; i2++)
     {
-        std::shared_ptr<MapPoint> pMP = vpMapPoints2[i2];
+        MapPoint* pMP = vpMapPoints2[i2];
 
         if(!pMP || vbAlreadyMatched2[i2])
             continue;
@@ -1263,7 +1263,7 @@ int ORBmatcher::SearchBySim3(std::shared_ptr<KeyFrame> pKF1, std::shared_ptr<Key
             continue;
 
         // Compute predicted octave
-        const int nPredictedLevel = pMP->PredictScale(dist3D,*pKF1);
+        const int nPredictedLevel = pMP->PredictScale(dist3D,pKF1);
 
         // Search in a radius of 2.5*sigma(ScaleLevel)
         const float radius = th*pKF1->mvScaleFactors[nPredictedLevel];
@@ -1350,7 +1350,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
 
     for(int i=0; i<LastFrame.N; i++)
     {
-        std::shared_ptr<MapPoint> pMP = LastFrame.mvpMapPoints[i];
+        MapPoint* pMP = LastFrame.mvpMapPoints[i];
 
         if(pMP)
         {
@@ -1459,7 +1459,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
             {
                 for(size_t j=0, jend=rotHist[i].size(); j<jend; j++)
                 {
-                    CurrentFrame.mvpMapPoints[rotHist[i][j]]=nullptr;
+                    CurrentFrame.mvpMapPoints[rotHist[i][j]]=static_cast<MapPoint*>(NULL);
                     nmatches--;
                 }
             }
@@ -1469,7 +1469,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
     return nmatches;
 }
 
-int ORBmatcher::SearchByProjection(Frame &CurrentFrame, std::shared_ptr<KeyFrame> pKF, const set<std::shared_ptr<MapPoint>> &sAlreadyFound, const float th , const int ORBdist)
+int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set<MapPoint*> &sAlreadyFound, const float th , const int ORBdist)
 {
     int nmatches = 0;
 
@@ -1483,11 +1483,11 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, std::shared_ptr<KeyFrame
         rotHist[i].reserve(500);
     const float factor = 1.0f/HISTO_LENGTH;
 
-    const vector<std::shared_ptr<MapPoint>> vpMPs = pKF->GetMapPointMatches();
+    const vector<MapPoint*> vpMPs = pKF->GetMapPointMatches();
 
     for(size_t i=0, iend=vpMPs.size(); i<iend; i++)
     {
-        std::shared_ptr<MapPoint> pMP = vpMPs[i];
+        MapPoint* pMP = vpMPs[i];
 
         if(pMP)
         {
@@ -1520,7 +1520,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, std::shared_ptr<KeyFrame
                 if(dist3D<minDistance || dist3D>maxDistance)
                     continue;
 
-                int nPredictedLevel = pMP->PredictScale(dist3D,CurrentFrame);
+                int nPredictedLevel = pMP->PredictScale(dist3D,&CurrentFrame);
 
                 // Search in a window
                 const float radius = th*CurrentFrame.mvScaleFactors[nPredictedLevel];
@@ -1588,7 +1588,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, std::shared_ptr<KeyFrame
             {
                 for(size_t j=0, jend=rotHist[i].size(); j<jend; j++)
                 {
-                    CurrentFrame.mvpMapPoints[rotHist[i][j]]=nullptr;
+                    CurrentFrame.mvpMapPoints[rotHist[i][j]]=NULL;
                     nmatches--;
                 }
             }

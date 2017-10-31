@@ -26,9 +26,9 @@
 namespace ORB_SLAM2
 {
 
-Viewer::Viewer(std::shared_ptr<System> pSystem, std::shared_ptr<FrameDrawer> pFrameDrawer, std::shared_ptr<MapDrawer> pMapDrawer, std::shared_ptr<Tracking> pTracking, const string &strSettingPath):
+Viewer::Viewer(System* pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Tracking *pTracking, const string &strSettingPath):
     mpSystem(pSystem), mpFrameDrawer(pFrameDrawer),mpMapDrawer(pMapDrawer), mpTracker(pTracking),
-    mbFinishRequested(false), mbFinished(true), mbStopped(false), mbStopRequested(false)
+    mbFinishRequested(false), mbFinished(true), mbStopped(true), mbStopRequested(false)
 {
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
 
@@ -54,6 +54,7 @@ Viewer::Viewer(std::shared_ptr<System> pSystem, std::shared_ptr<FrameDrawer> pFr
 void Viewer::Run()
 {
     mbFinished = false;
+    mbStopped = false;
 
     pangolin::CreateWindowAndBind("ORB-SLAM2: Map Viewer",1024,768);
 
@@ -91,7 +92,7 @@ void Viewer::Run()
     bool bFollow = true;
     bool bLocalizationMode = false;
 
-    while(!pangolin::ShouldQuit())
+    while(1)
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -154,15 +155,14 @@ void Viewer::Run()
 
         if(Stop())
         {
-            while(isStopped() && !CheckFinish())
+            while(isStopped())
             {
                 usleep(3000);
             }
         }
 
-        if(CheckFinish()) {
-            pangolin::Quit();
-        }
+        if(CheckFinish())
+            break;
     }
 
     SetFinish();
@@ -207,9 +207,8 @@ bool Viewer::isStopped()
 
 bool Viewer::Stop()
 {
-    unique_lock<mutex> lock(mMutexStop, std::defer_lock);
-    unique_lock<mutex> lock2(mMutexFinish, std::defer_lock);
-    std::lock(lock, lock2);
+    unique_lock<mutex> lock(mMutexStop);
+    unique_lock<mutex> lock2(mMutexFinish);
 
     if(mbFinishRequested)
         return false;

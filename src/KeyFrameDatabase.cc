@@ -30,14 +30,14 @@ using namespace std;
 namespace ORB_SLAM2
 {
 
-KeyFrameDatabase::KeyFrameDatabase (const std::shared_ptr<ORBVocabulary> voc):
-    mpVoc(voc)
+KeyFrameDatabase::KeyFrameDatabase (const ORBVocabulary &voc):
+    mpVoc(&voc)
 {
-    mvInvertedFile.resize(voc->size());
+    mvInvertedFile.resize(voc.size());
 }
 
 
-void KeyFrameDatabase::add(std::shared_ptr<KeyFrame>pKF)
+void KeyFrameDatabase::add(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutex);
 
@@ -45,7 +45,7 @@ void KeyFrameDatabase::add(std::shared_ptr<KeyFrame>pKF)
         mvInvertedFile[vit->first].push_back(pKF);
 }
 
-void KeyFrameDatabase::erase(std::shared_ptr<KeyFrame> pKF)
+void KeyFrameDatabase::erase(KeyFrame* pKF)
 {
     unique_lock<mutex> lock(mMutex);
 
@@ -53,9 +53,9 @@ void KeyFrameDatabase::erase(std::shared_ptr<KeyFrame> pKF)
     for(DBoW2::BowVector::const_iterator vit=pKF->mBowVec.begin(), vend=pKF->mBowVec.end(); vit!=vend; vit++)
     {
         // List of keyframes that share the word
-        list<shared_ptr<KeyFrame>> &lKFs =   mvInvertedFile[vit->first];
+        list<KeyFrame*> &lKFs =   mvInvertedFile[vit->first];
 
-        for(auto lit=lKFs.begin(), lend= lKFs.end(); lit!=lend; lit++)
+        for(list<KeyFrame*>::iterator lit=lKFs.begin(), lend= lKFs.end(); lit!=lend; lit++)
         {
             if(pKF==*lit)
             {
@@ -73,10 +73,10 @@ void KeyFrameDatabase::clear()
 }
 
 
-vector<shared_ptr<KeyFrame>> KeyFrameDatabase::DetectLoopCandidates(shared_ptr<KeyFrame> pKF, float minScore)
+vector<KeyFrame*> KeyFrameDatabase::DetectLoopCandidates(KeyFrame* pKF, float minScore)
 {
-    set<shared_ptr<KeyFrame>> spConnectedKeyFrames = pKF->GetConnectedKeyFrames();
-    list<shared_ptr<KeyFrame>> lKFsSharingWords;
+    set<KeyFrame*> spConnectedKeyFrames = pKF->GetConnectedKeyFrames();
+    list<KeyFrame*> lKFsSharingWords;
 
     // Search all keyframes that share a word with current keyframes
     // Discard keyframes connected to the query keyframe
@@ -85,11 +85,11 @@ vector<shared_ptr<KeyFrame>> KeyFrameDatabase::DetectLoopCandidates(shared_ptr<K
 
         for(DBoW2::BowVector::const_iterator vit=pKF->mBowVec.begin(), vend=pKF->mBowVec.end(); vit != vend; vit++)
         {
-            list<std::shared_ptr<KeyFrame>> &lKFs =   mvInvertedFile[vit->first];
+            list<KeyFrame*> &lKFs =   mvInvertedFile[vit->first];
 
-            for(list<std::shared_ptr<KeyFrame>>::iterator lit=lKFs.begin(), lend= lKFs.end(); lit!=lend; lit++)
+            for(list<KeyFrame*>::iterator lit=lKFs.begin(), lend= lKFs.end(); lit!=lend; lit++)
             {
-                std::shared_ptr<KeyFrame> pKFi=*lit;
+                KeyFrame* pKFi=*lit;
                 if(pKFi->mnLoopQuery!=pKF->mnId)
                 {
                     pKFi->mnLoopWords=0;
@@ -105,13 +105,13 @@ vector<shared_ptr<KeyFrame>> KeyFrameDatabase::DetectLoopCandidates(shared_ptr<K
     }
 
     if(lKFsSharingWords.empty())
-        return vector<std::shared_ptr<KeyFrame>>();
+        return vector<KeyFrame*>();
 
-    list<pair<float,std::shared_ptr<KeyFrame>> > lScoreAndMatch;
+    list<pair<float,KeyFrame*> > lScoreAndMatch;
 
     // Only compare against those keyframes that share enough words
     int maxCommonWords=0;
-    for(list<std::shared_ptr<KeyFrame>>::iterator lit=lKFsSharingWords.begin(), lend= lKFsSharingWords.end(); lit!=lend; lit++)
+    for(list<KeyFrame*>::iterator lit=lKFsSharingWords.begin(), lend= lKFsSharingWords.end(); lit!=lend; lit++)
     {
         if((*lit)->mnLoopWords>maxCommonWords)
             maxCommonWords=(*lit)->mnLoopWords;
@@ -122,9 +122,9 @@ vector<shared_ptr<KeyFrame>> KeyFrameDatabase::DetectLoopCandidates(shared_ptr<K
     int nscores=0;
 
     // Compute similarity score. Retain the matches whose score is higher than minScore
-    for(list<std::shared_ptr<KeyFrame>>::iterator lit=lKFsSharingWords.begin(), lend= lKFsSharingWords.end(); lit!=lend; lit++)
+    for(list<KeyFrame*>::iterator lit=lKFsSharingWords.begin(), lend= lKFsSharingWords.end(); lit!=lend; lit++)
     {
-        std::shared_ptr<KeyFrame> pKFi = *lit;
+        KeyFrame* pKFi = *lit;
 
         if(pKFi->mnLoopWords>minCommonWords)
         {
@@ -139,23 +139,23 @@ vector<shared_ptr<KeyFrame>> KeyFrameDatabase::DetectLoopCandidates(shared_ptr<K
     }
 
     if(lScoreAndMatch.empty())
-        return vector<std::shared_ptr<KeyFrame>>();
+        return vector<KeyFrame*>();
 
-    list<pair<float,std::shared_ptr<KeyFrame>> > lAccScoreAndMatch;
+    list<pair<float,KeyFrame*> > lAccScoreAndMatch;
     float bestAccScore = minScore;
 
     // Lets now accumulate score by covisibility
-    for(list<pair<float,std::shared_ptr<KeyFrame>> >::iterator it=lScoreAndMatch.begin(), itend=lScoreAndMatch.end(); it!=itend; it++)
+    for(list<pair<float,KeyFrame*> >::iterator it=lScoreAndMatch.begin(), itend=lScoreAndMatch.end(); it!=itend; it++)
     {
-        std::shared_ptr<KeyFrame> pKFi = it->second;
-        vector<std::shared_ptr<KeyFrame>> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
+        KeyFrame* pKFi = it->second;
+        vector<KeyFrame*> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
 
         float bestScore = it->first;
         float accScore = it->first;
-        std::shared_ptr<KeyFrame> pBestKF = pKFi;
-        for(vector<std::shared_ptr<KeyFrame>>::iterator vit=vpNeighs.begin(), vend=vpNeighs.end(); vit!=vend; vit++)
+        KeyFrame* pBestKF = pKFi;
+        for(vector<KeyFrame*>::iterator vit=vpNeighs.begin(), vend=vpNeighs.end(); vit!=vend; vit++)
         {
-            std::shared_ptr<KeyFrame> pKF2 = *vit;
+            KeyFrame* pKF2 = *vit;
             if(pKF2->mnLoopQuery==pKF->mnId && pKF2->mnLoopWords>minCommonWords)
             {
                 accScore+=pKF2->mLoopScore;
@@ -175,15 +175,15 @@ vector<shared_ptr<KeyFrame>> KeyFrameDatabase::DetectLoopCandidates(shared_ptr<K
     // Return all those keyframes with a score higher than 0.75*bestScore
     float minScoreToRetain = 0.75f*bestAccScore;
 
-    set<std::shared_ptr<KeyFrame>> spAlreadyAddedKF;
-    vector<std::shared_ptr<KeyFrame>> vpLoopCandidates;
+    set<KeyFrame*> spAlreadyAddedKF;
+    vector<KeyFrame*> vpLoopCandidates;
     vpLoopCandidates.reserve(lAccScoreAndMatch.size());
 
-    for(list<pair<float,std::shared_ptr<KeyFrame>> >::iterator it=lAccScoreAndMatch.begin(), itend=lAccScoreAndMatch.end(); it!=itend; it++)
+    for(list<pair<float,KeyFrame*> >::iterator it=lAccScoreAndMatch.begin(), itend=lAccScoreAndMatch.end(); it!=itend; it++)
     {
         if(it->first>minScoreToRetain)
         {
-            std::shared_ptr<KeyFrame> pKFi = it->second;
+            KeyFrame* pKFi = it->second;
             if(!spAlreadyAddedKF.count(pKFi))
             {
                 vpLoopCandidates.push_back(pKFi);
@@ -196,25 +196,25 @@ vector<shared_ptr<KeyFrame>> KeyFrameDatabase::DetectLoopCandidates(shared_ptr<K
     return vpLoopCandidates;
 }
 
-vector<std::shared_ptr<KeyFrame>> KeyFrameDatabase::DetectRelocalizationCandidates(const Frame& F)
+vector<KeyFrame*> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F)
 {
-    list<std::shared_ptr<KeyFrame>> lKFsSharingWords;
+    list<KeyFrame*> lKFsSharingWords;
 
     // Search all keyframes that share a word with current frame
     {
         unique_lock<mutex> lock(mMutex);
 
-        for(DBoW2::BowVector::const_iterator vit=F.mBowVec.begin(), vend=F.mBowVec.end(); vit != vend; vit++)
+        for(DBoW2::BowVector::const_iterator vit=F->mBowVec.begin(), vend=F->mBowVec.end(); vit != vend; vit++)
         {
-            list<std::shared_ptr<KeyFrame>> &lKFs =   mvInvertedFile[vit->first];
+            list<KeyFrame*> &lKFs =   mvInvertedFile[vit->first];
 
-            for(list<std::shared_ptr<KeyFrame>>::iterator lit=lKFs.begin(), lend= lKFs.end(); lit!=lend; lit++)
+            for(list<KeyFrame*>::iterator lit=lKFs.begin(), lend= lKFs.end(); lit!=lend; lit++)
             {
-                std::shared_ptr<KeyFrame> pKFi=*lit;
-                if(pKFi->mnRelocQuery!=F.mnId)
+                KeyFrame* pKFi=*lit;
+                if(pKFi->mnRelocQuery!=F->mnId)
                 {
                     pKFi->mnRelocWords=0;
-                    pKFi->mnRelocQuery=F.mnId;
+                    pKFi->mnRelocQuery=F->mnId;
                     lKFsSharingWords.push_back(pKFi);
                 }
                 pKFi->mnRelocWords++;
@@ -222,11 +222,11 @@ vector<std::shared_ptr<KeyFrame>> KeyFrameDatabase::DetectRelocalizationCandidat
         }
     }
     if(lKFsSharingWords.empty())
-        return vector<std::shared_ptr<KeyFrame>>();
+        return vector<KeyFrame*>();
 
     // Only compare against those keyframes that share enough words
     int maxCommonWords=0;
-    for(list<std::shared_ptr<KeyFrame>>::iterator lit=lKFsSharingWords.begin(), lend= lKFsSharingWords.end(); lit!=lend; lit++)
+    for(list<KeyFrame*>::iterator lit=lKFsSharingWords.begin(), lend= lKFsSharingWords.end(); lit!=lend; lit++)
     {
         if((*lit)->mnRelocWords>maxCommonWords)
             maxCommonWords=(*lit)->mnRelocWords;
@@ -234,43 +234,43 @@ vector<std::shared_ptr<KeyFrame>> KeyFrameDatabase::DetectRelocalizationCandidat
 
     int minCommonWords = maxCommonWords*0.8f;
 
-    list<pair<float,std::shared_ptr<KeyFrame>> > lScoreAndMatch;
+    list<pair<float,KeyFrame*> > lScoreAndMatch;
 
     int nscores=0;
 
     // Compute similarity score.
-    for(list<std::shared_ptr<KeyFrame>>::iterator lit=lKFsSharingWords.begin(), lend= lKFsSharingWords.end(); lit!=lend; lit++)
+    for(list<KeyFrame*>::iterator lit=lKFsSharingWords.begin(), lend= lKFsSharingWords.end(); lit!=lend; lit++)
     {
-        std::shared_ptr<KeyFrame> pKFi = *lit;
+        KeyFrame* pKFi = *lit;
 
         if(pKFi->mnRelocWords>minCommonWords)
         {
             nscores++;
-            float si = mpVoc->score(F.mBowVec,pKFi->mBowVec);
+            float si = mpVoc->score(F->mBowVec,pKFi->mBowVec);
             pKFi->mRelocScore=si;
             lScoreAndMatch.push_back(make_pair(si,pKFi));
         }
     }
 
     if(lScoreAndMatch.empty())
-        return vector<std::shared_ptr<KeyFrame>>();
+        return vector<KeyFrame*>();
 
-    list<pair<float,std::shared_ptr<KeyFrame>> > lAccScoreAndMatch;
+    list<pair<float,KeyFrame*> > lAccScoreAndMatch;
     float bestAccScore = 0;
 
     // Lets now accumulate score by covisibility
-    for(list<pair<float,std::shared_ptr<KeyFrame>> >::iterator it=lScoreAndMatch.begin(), itend=lScoreAndMatch.end(); it!=itend; it++)
+    for(list<pair<float,KeyFrame*> >::iterator it=lScoreAndMatch.begin(), itend=lScoreAndMatch.end(); it!=itend; it++)
     {
-        std::shared_ptr<KeyFrame> pKFi = it->second;
-        vector<std::shared_ptr<KeyFrame>> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
+        KeyFrame* pKFi = it->second;
+        vector<KeyFrame*> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
 
         float bestScore = it->first;
         float accScore = bestScore;
-        std::shared_ptr<KeyFrame> pBestKF = pKFi;
-        for(vector<std::shared_ptr<KeyFrame>>::iterator vit=vpNeighs.begin(), vend=vpNeighs.end(); vit!=vend; vit++)
+        KeyFrame* pBestKF = pKFi;
+        for(vector<KeyFrame*>::iterator vit=vpNeighs.begin(), vend=vpNeighs.end(); vit!=vend; vit++)
         {
-            std::shared_ptr<KeyFrame> pKF2 = *vit;
-            if(pKF2->mnRelocQuery!=F.mnId)
+            KeyFrame* pKF2 = *vit;
+            if(pKF2->mnRelocQuery!=F->mnId)
                 continue;
 
             accScore+=pKF2->mRelocScore;
@@ -288,15 +288,15 @@ vector<std::shared_ptr<KeyFrame>> KeyFrameDatabase::DetectRelocalizationCandidat
 
     // Return all those keyframes with a score higher than 0.75*bestScore
     float minScoreToRetain = 0.75f*bestAccScore;
-    set<std::shared_ptr<KeyFrame>> spAlreadyAddedKF;
-    vector<std::shared_ptr<KeyFrame>> vpRelocCandidates;
+    set<KeyFrame*> spAlreadyAddedKF;
+    vector<KeyFrame*> vpRelocCandidates;
     vpRelocCandidates.reserve(lAccScoreAndMatch.size());
-    for(list<pair<float,std::shared_ptr<KeyFrame>> >::iterator it=lAccScoreAndMatch.begin(), itend=lAccScoreAndMatch.end(); it!=itend; it++)
+    for(list<pair<float,KeyFrame*> >::iterator it=lAccScoreAndMatch.begin(), itend=lAccScoreAndMatch.end(); it!=itend; it++)
     {
         const float &si = it->first;
         if(si>minScoreToRetain)
         {
-            std::shared_ptr<KeyFrame> pKFi = it->second;
+            KeyFrame* pKFi = it->second;
             if(!spAlreadyAddedKF.count(pKFi))
             {
                 vpRelocCandidates.push_back(pKFi);

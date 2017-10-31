@@ -27,7 +27,6 @@
 #include "Tracking.h"
 #include "KeyFrameDatabase.h"
 
-#include <memory>
 #include <mutex>
 
 
@@ -41,16 +40,16 @@ class Map;
 class LocalMapping
 {
 public:
-    LocalMapping(std::shared_ptr<Map> pMap, const float bMonocular);
+    LocalMapping(Map* pMap, const float bMonocular);
 
-    void SetLoopCloser(std::shared_ptr<LoopClosing> pLoopCloser);
+    void SetLoopCloser(LoopClosing* pLoopCloser);
 
-    void SetTracker(std::shared_ptr<Tracking> pTracker);
+    void SetTracker(Tracking* pTracker);
 
     // Main function
     void Run();
 
-    void InsertKeyFrame(std::shared_ptr<KeyFrame> pKF);
+    void InsertKeyFrame(KeyFrame* pKF);
 
     // Thread Synch
     void RequestStop();
@@ -84,7 +83,7 @@ protected:
 
     void KeyFrameCulling();
 
-    cv::Mat ComputeF12(std::shared_ptr<KeyFrame> &pKF1, std::shared_ptr<KeyFrame> &pKF2);
+    cv::Mat ComputeF12(KeyFrame* &pKF1, KeyFrame* &pKF2);
 
     cv::Mat SkewSymmetricMatrix(const cv::Mat &v);
 
@@ -100,16 +99,16 @@ protected:
     bool mbFinished;
     std::mutex mMutexFinish;
 
-    std::shared_ptr<Map> mpMap;
+    Map* mpMap;
 
-    std::shared_ptr<LoopClosing> mpLoopCloser;
-    std::shared_ptr<Tracking> mpTracker;
+    LoopClosing* mpLoopCloser;
+    Tracking* mpTracker;
 
-    std::list<std::shared_ptr<KeyFrame>> mlNewKeyFrames;
+    std::list<KeyFrame*> mlNewKeyFrames;
 
-    std::shared_ptr<KeyFrame> mpCurrentKeyFrame;
+    KeyFrame* mpCurrentKeyFrame;
 
-    std::list<std::shared_ptr<MapPoint>> mlpRecentAddedMapPoints;
+    std::list<MapPoint*> mlpRecentAddedMapPoints;
 
     std::mutex mMutexNewKFs;
 
