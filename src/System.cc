@@ -23,7 +23,9 @@
 #include "System.h"
 #include "Converter.h"
 #include <thread>
+#ifdef ENABLE_VIEWER
 #include <pangolin/pangolin.h>
+#endif // ENABLE_VIEWER
 #include <iomanip>
 
 namespace ORB_SLAM2
@@ -95,12 +97,14 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mptLoopClosing = new thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
 
     //Initialize the Viewer thread and launch
+#ifdef ENABLE_VIEWER
     if(bUseViewer)
     {
         mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile);
         mptViewer = new thread(&Viewer::Run, mpViewer);
         mpTracker->SetViewer(mpViewer);
     }
+#endif //ENABLE_VIEWER
 
     //Set pointers between threads
     mpTracker->SetLocalMapper(mpLocalMapper);
@@ -302,12 +306,14 @@ void System::Shutdown()
 {
     mpLocalMapper->RequestFinish();
     mpLoopCloser->RequestFinish();
+ #ifndef DISABLE_VIEWER
     if(mpViewer)
     {
         mpViewer->RequestFinish();
         while(!mpViewer->isFinished())
             usleep(5000);
     }
+#endif // DISABLE_VIEWER
 
     // Wait until all thread have effectively stopped
     while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() || mpLoopCloser->isRunningGBA())
@@ -315,8 +321,10 @@ void System::Shutdown()
         usleep(5000);
     }
 
+#ifdef ENABLE_VIEWER
     if(mpViewer)
         pangolin::BindToContext("ORB-SLAM2: Map Viewer");
+#endif // ENABLE_VIEWER
 }
 
 void System::SaveTrajectoryTUM(const string &filename)
