@@ -21,7 +21,9 @@
 #include "MapDrawer.h"
 #include "MapPoint.h"
 #include "KeyFrame.h"
+#ifdef ENABLE_VIEWER
 #include <pangolin/pangolin.h>
+#endif // ENABLE_VIEWER
 #include <mutex>
 
 namespace ORB_SLAM2
@@ -176,6 +178,7 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph)
     }
 }
 
+#ifdef ENABLE_VIEWER
 void MapDrawer::DrawCurrentCamera(pangolin::OpenGlMatrix &Twc)
 {
     const float &w = mCameraSize;
@@ -217,6 +220,7 @@ void MapDrawer::DrawCurrentCamera(pangolin::OpenGlMatrix &Twc)
 
     glPopMatrix();
 }
+#endif // ENABLE_VIEWER
 
 
 void MapDrawer::SetCurrentCameraPose(const cv::Mat &Tcw)
@@ -225,6 +229,7 @@ void MapDrawer::SetCurrentCameraPose(const cv::Mat &Tcw)
     mCameraPose = Tcw.clone();
 }
 
+#ifdef ENABLE_VIEWER
 void MapDrawer::GetCurrentOpenGLCameraMatrix(pangolin::OpenGlMatrix &M)
 {
     if(!mCameraPose.empty())
@@ -260,5 +265,6 @@ void MapDrawer::GetCurrentOpenGLCameraMatrix(pangolin::OpenGlMatrix &M)
     else
         M.SetIdentity();
 }
+#endif // ENABLE_VIEWER
 
 } //namespace ORB_SLAM

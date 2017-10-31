@@ -24,7 +24,9 @@
 #include"Map.h"
 #include"MapPoint.h"
 #include"KeyFrame.h"
+#ifdef ENABLE_VIEWER
 #include<pangolin/pangolin.h>
+#endif // ENABLE_VIEWER
 
 #include<mutex>
 
@@ -40,10 +42,14 @@ public:
 
     void DrawMapPoints();
     void DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph);
+#ifdef ENABLE_VIEWER
     void DrawCurrentCamera(pangolin::OpenGlMatrix &Twc);
+#endif // ENABLE_VIEWER
     void SetCurrentCameraPose(const cv::Mat &Tcw);
     void SetReferenceKeyFrame(KeyFrame *pKF);
+#ifdef ENABLE_VIEWER
     void GetCurrentOpenGLCameraMatrix(pangolin::OpenGlMatrix &M);
+#endif // ENABLE_VIEWER
 
 private:
 

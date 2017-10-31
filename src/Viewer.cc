@@ -19,7 +19,9 @@
 */
 
 #include "Viewer.h"
+#ifdef ENABLE_VIEWER
 #include <pangolin/pangolin.h>
+#endif // ENABLE_VIEWER
 
 #include <mutex>
 
@@ -53,6 +55,7 @@ Viewer::Viewer(System* pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer
 
 void Viewer::Run()
 {
+#ifdef ENABLE_VIEWER
     mbFinished = false;
     mbStopped = false;
 
@@ -166,47 +169,67 @@ void Viewer::Run()
     }
 
     SetFinish();
+#endif //ENABLE_VIEWER
 }
 
 void Viewer::RequestFinish()
 {
+#ifdef ENABLE_VIEWER
     unique_lock<mutex> lock(mMutexFinish);
     mbFinishRequested = true;
+#endif //ENABLE_VIEWER
 }
 
 bool Viewer::CheckFinish()
 {
+#ifdef ENABLE_VIEWER
     unique_lock<mutex> lock(mMutexFinish);
     return mbFinishRequested;
+#else
+    return true;
+#endif // ENABLE_VIEWER
 }
 
 void Viewer::SetFinish()
 {
+#ifdef ENABLE_VIEWER
     unique_lock<mutex> lock(mMutexFinish);
     mbFinished = true;
+#endif // ENABLE_VIEWER
 }
 
 bool Viewer::isFinished()
 {
+#ifdef ENABLE_VIEWER
     unique_lock<mutex> lock(mMutexFinish);
     return mbFinished;
+#else
+    return true;
+#endif // ENABLE_VIEWER
 }
 
 void Viewer::RequestStop()
 {
+#ifdef ENABLE_VIEWER
     unique_lock<mutex> lock(mMutexStop);
     if(!mbStopped)
         mbStopRequested = true;
+#endif // ENABLE_VIEWER
 }
 
 bool Viewer::isStopped()
 {
+#ifdef ENABLE_VIEWER
     unique_lock<mutex> lock(mMutexStop);
     return mbStopped;
+#else
+    return false;
+#endif // ENABLE_VIEWER
 }
 
 bool Viewer::Stop()
 {
+#ifdef ENABLE_VIEWER
     unique_lock<mutex> lock(mMutexStop);
     unique_lock<mutex> lock2(mMutexFinish);
 
@@ -220,13 +243,18 @@ bool Viewer::Stop()
     }
 
     return false;
+#else
+    return true;
+#endif // ENABLE_VIEWER
 
 }
 
 void Viewer::Release()
 {
+#ifdef ENABLE_VIEWER
     unique_lock<mutex> lock(mMutexStop);
     mbStopped = false;
+#endif // ENABLE_VIEWER
 }
 
 }

@@ -37,7 +37,11 @@ if(NOT OpenCV_FOUND)
 endif()
 
 find_package(Eigen3 3.1.0 REQUIRED)
-find_package(Pangolin REQUIRED)
+find_package(Pangolin)
+
+if (Pangolin_FOUND)
+  add_definitions(-DENABLE_VIEWER=1)
+endif()
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
@@ -45,6 +49,9 @@ ${PROJECT_SOURCE_DIR}/include
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
 )
+if (Pangolin_FOUND)
+  include_directories(${Pangolin_INCLUDE_DIRS})
+endif()
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
@@ -73,10 +80,12 @@ src/Viewer.cc
 target_link_libraries(${PROJECT_NAME}
 ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
-${Pangolin_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
 )
+if (Pangolin_FOUND)
+  target_link_libraries(${Pangolin_LIBRARIES})
+endif()
 
 # Build examples
 
