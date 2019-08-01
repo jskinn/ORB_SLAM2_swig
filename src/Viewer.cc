@@ -23,6 +23,7 @@
 #include <pangolin/pangolin.h>
 #endif // ENABLE_VIEWER
 
+#include<unistd.h>
 #include <mutex>
 
 namespace ORB_SLAM2
