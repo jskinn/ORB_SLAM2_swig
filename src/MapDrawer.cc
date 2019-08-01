@@ -45,6 +45,7 @@ MapDrawer::MapDrawer(Map* pMap, const string &strSettingPath):mpMap(pMap)
 
 void MapDrawer::DrawMapPoints()
 {
+#ifdef ENABLE_VIEWER
     const vector<MapPoint*> &vpMPs = mpMap->GetAllMapPoints();
     const vector<MapPoint*> &vpRefMPs = mpMap->GetReferenceMapPoints();
 
@@ -80,10 +81,12 @@ void MapDrawer::DrawMapPoints()
     }
 
     glEnd();
+#endif // ENABLE_VIEWER
 }
 
 void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph)
 {
+#ifdef ENABLE_VIEWER
     const float &w = mKeyFrameSize;
     const float h = w*0.75;
     const float z = w*0.6;
@@ -176,6 +179,7 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph)
 
         glEnd();
     }
+#endif // ENABLE_VIEWER
 }
 
 #ifdef ENABLE_VIEWER
