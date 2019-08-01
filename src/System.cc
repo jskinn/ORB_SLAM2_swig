@@ -23,6 +23,7 @@
 #include "System.h"
 #include "Converter.h"
 #include <thread>
+#include <unistd.h>
 #ifdef ENABLE_VIEWER
 #include <pangolin/pangolin.h>
 #endif // ENABLE_VIEWER
@@ -483,6 +484,16 @@ int System::GetTrackingState()
 {
     unique_lock<mutex> lock(mMutexState);
     return mTrackingState;
+}
+
+vector<KeyFrame*> System::GetKeyFrames() const
+{
+    return mpMap->GetAllKeyFrames();
+}
+
+Tracking* System::GetTracker() const
+{
+    return mpTracker;
 }
 
 vector<MapPoint*> System::GetTrackedMapPoints()
