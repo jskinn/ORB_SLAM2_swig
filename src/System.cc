@@ -306,14 +306,14 @@ void System::Shutdown()
 {
     mpLocalMapper->RequestFinish();
     mpLoopCloser->RequestFinish();
- #ifndef DISABLE_VIEWER
+ #ifdef ENABLE_VIEWER
     if(mpViewer)
     {
         mpViewer->RequestFinish();
         while(!mpViewer->isFinished())
             usleep(5000);
     }
-#endif // DISABLE_VIEWER
+#endif // ENABLE_VIEWER
 
     // Wait until all thread have effectively stopped
     while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() || mpLoopCloser->isRunningGBA())
