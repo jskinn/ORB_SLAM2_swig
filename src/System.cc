@@ -55,8 +55,8 @@ System::System(const std::string &strVocFile, const std::string &strSettingsFile
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
-       cerr << "Failed to open settings file at: " << strSettingsFile << endl;
-       exit(-1);
+        cerr << "Failed to open settings file at: " << strSettingsFile << endl;
+        throw std::exception();
     }
 
 
@@ -69,7 +69,7 @@ System::System(const std::string &strVocFile, const std::string &strSettingsFile
     {
         cerr << "Wrong path to vocabulary. " << endl;
         cerr << "Falied to open at: " << strVocFile << endl;
-        exit(-1);
+        throw std::exception();
     }
     cout << "Vocabulary loaded!" << endl << endl;
 
@@ -122,7 +122,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
     if(mSensor!=STEREO)
     {
         cerr << "ERROR: you called TrackStereo but input sensor was not set to STEREO." << endl;
-        exit(-1);
+        throw std::exception();
     }   
 
     // Check mode change
@@ -173,7 +173,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     if(mSensor!=RGBD)
     {
         cerr << "ERROR: you called TrackRGBD but input sensor was not set to RGBD." << endl;
-        exit(-1);
+        throw std::exception();
     }    
 
     // Check mode change
@@ -224,7 +224,7 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
     if(mSensor!=MONOCULAR)
     {
         cerr << "ERROR: you called TrackMonocular but input sensor was not set to Monocular." << endl;
-        exit(-1);
+        throw std::exception();
     }
 
     // Check mode change
