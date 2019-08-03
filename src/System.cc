@@ -117,6 +117,41 @@ System::System(const std::string &strVocFile, const std::string &strSettingsFile
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
 }
 
+System::~System()
+{
+    // First, shutdown
+    mpLocalMapper->RequestFinish();
+    mpLoopCloser->RequestFinish();
+    #ifdef ENABLE_VIEWER
+    if(mpViewer)
+    {
+        mpViewer->RequestFinish();
+    }
+    #endif // ENABLE_VIEWER
+
+    // Then join the threads
+    mptLoopClosing->join();
+    mptLocalMapping->join();
+
+    // Delete in reverse order. Threads first.
+    // TODO: This will still leak memory like a sieve. Still the most basic possible destructor.
+    // TODO: Change to properly managed smart pointers.
+    delete mptLoopClosing;
+    delete mpLoopCloser;
+
+    delete mptLocalMapping;
+    delete mpLocalMapper;
+
+    delete mpTracker;
+
+    delete mpMapDrawer;
+    delete mpFrameDrawer;
+
+    delete mpMap;
+    delete mpKeyFrameDatabase;
+    delete mpVocabulary;
+}
+
 cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
 {
     if(mSensor!=STEREO)
