@@ -1,6 +1,6 @@
 #from distutils.core import setup, Extension
 from setuptools import setup, Extension
-from distutils.sysconfig import get_config_vars
+import sys
 import platform
 import numpy
 import os
@@ -8,21 +8,22 @@ import re
 from pathlib import Path
 
 
-def build_search_paths():
+def get_include_paths():
+    """
+    Get a set of plausible search paths to look for things.
+    """
+    paths = {Path(sys.prefix) / 'include'}
+    # If we're in an anaconda environment, add it as well (might be the same as sys.prefix)
+    if 'CONDA_PREFIX' in os.environ:
+        paths.add(Path(os.environ['CONDA_PREFIX']) / 'include')
+    return paths
+
+def get_library_paths():
     """
     Get a set of plausible search paths to look for things.
     TODO: Find a way of choosing workable directories on Windows/Mac
     """
-    paths = []
-    # If we're in an anaconda environment, search it for libraries/include files
-    if 'CONDA_PREFIX' in os.environ:
-        paths.append(Path(os.environ['CONDA_PREFIX']))
-    # Add default system header paths on linux
-    if platform.system() == 'Linux':
-        paths.append(Path('/usr/local/include'))
-        paths.append(Path('/usr/include'))
-        paths.append(Path('/usr/lib'))
-    return paths
+    return {Path(sys.prefix) / 'lib'}
 
 
 def find_path(search_paths, indicator_file):
@@ -31,6 +32,7 @@ def find_path(search_paths, indicator_file):
     Use to find plausible include or library directories,
     e.g. `find_path([..], 'libopencv_core.so')`
     will try and find a directory containing libopencv_core.so, which can be added as a library dir.
+    Exists because sometimes libraries install things in subdirectories, we need to find a root that works.
     """
     include_dir = None
     for to_search in search_paths:
@@ -41,10 +43,12 @@ def find_path(search_paths, indicator_file):
                 include_dir = found_path.parents[len(indicator_file.split('/')) - 1] # Strip off the relative path we were searching for
     return include_dir
 
-
-search_paths = build_search_paths()
+# Find the required include files and library dirs
+search_paths = get_include_paths()
 eigen_include = find_path(search_paths, 'signature_of_eigen3_matrix_library')
 opencv_include = find_path(search_paths, 'opencv2/core/core.hpp')
+
+search_paths = get_library_paths()
 opencv_lib = find_path(search_paths, 'libopencv_core.so')
 
 # The full list of OpenCV libraries to link to
