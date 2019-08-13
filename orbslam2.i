@@ -1,15 +1,17 @@
 %module orbslam2
 %{
 #define SWIG_FILE_WITH_INIT
-#include "include/System.h"
+#include "include/Tracking.h"
 #include "include/KeyFrame.h"
 #include "include/MapPoint.h"
-using namespace ORB_SLAM2;
+#include "include/System.h"
+//using namespace ORB_SLAM2;
 %}
 
 %include std_string.i
 %include exception.i
 //%include std_vector.i
+//%include std_list.i
 
 // Auto-document, see http://www.swig.org/Doc4.0/Python.html#Python_nn67
 %feature("autodoc", "1");
@@ -19,6 +21,10 @@ using namespace ORB_SLAM2;
 %init %{
   import_array();
 %}
+
+// Templates for list types (used in Tracking)
+//%template(float_list) std::list<float>;
+//%template(bool_list) std::list<bool>;
 
 // Handle exceptions in the constructor. API could be better.
 // see https://stackoverflow.com/questions/1394484/how-do-i-propagate-c-exceptions-to-python-in-a-swig-wrapper-library
@@ -57,7 +63,50 @@ using namespace ORB_SLAM2;
 %rename SaveTrajectoryKITTI save_trajectory_KITTI;
 %rename SaveTrajectoryTUM save_trajectory_TUM;
 
+// Ignore most of the tracking object
+%ignore ORB_SLAM2::Tracking::Tracking;
+%ignore ORB_SLAM2::Tracking::GrabImageStereo;
+%ignore ORB_SLAM2::Tracking::GrabImageRGBD;
+%ignore ORB_SLAM2::Tracking::GrabImageMonocular;
+%ignore ORB_SLAM2::Tracking::SetLocalMapper;
+%ignore ORB_SLAM2::Tracking::SetLoopClosing;
+%ignore ORB_SLAM2::Tracking::SetViewer;
+%ignore ORB_SLAM2::Tracking::ChangeCalibration;
+%ignore ORB_SLAM2::Tracking::InformOnlyTracking;
+%ignore ORB_SLAM2::Tracking::Reset;
+%ignore ORB_SLAM2::Tracking::mCurrentFrame;
+%ignore ORB_SLAM2::Tracking::mImGray;
+%ignore ORB_SLAM2::Tracking::mvIniLastMatches;
+%ignore ORB_SLAM2::Tracking::mvIniMatches;
+%ignore ORB_SLAM2::Tracking::mvbPrevMatched;
+%ignore ORB_SLAM2::Tracking::mvIniP3D;
+%ignore ORB_SLAM2::Tracking::mInitialFrame;
+%ignore ORB_SLAM2::Tracking::mlRelativeFramePoses;
+%ignore ORB_SLAM2::Tracking::mlpReferences;
+%ignore ORB_SLAM2::Tracking::mlFrameTimes;
+%ignore ORB_SLAM2::Tracking::mlbLost;
+
+// Mark some tracking properties read-only
+%immutable ORB_SLAM2::Tracking::mState;
+%immutable ORB_SLAM2::Tracking::mLastProcessedState;
+%immutable ORB_SLAM2::Tracking::mSensor;
+//%immutable ORB_SLAM2::Tracking::mlpReferences;
+//%immutable ORB_SLAM2::Tracking::mlFrameTimes;
+//%immutable ORB_SLAM2::Tracking::mlbLost;
+%immutable ORB_SLAM2::Tracking::mbOnlyTracking;
+
+// What to wrap
 %include "include/System.h"
+%include "include/Tracking.h"
+
+// Duplicate the tracking state enum so we can interpret the result of GetTrackingState
+// enum TrackingState {
+//   SYSTEM_NOT_READY,
+//   NO_IMAGES_YET,
+//   NOT_INITIALIZED,
+//   OK,
+//   LOST
+// };
 
 // apply the numpy typemap to enable a more comforable call with 2D images
 %extend ORB_SLAM2::System {
