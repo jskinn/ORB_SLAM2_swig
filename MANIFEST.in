@@ -1,0 +1,4 @@
+include include/*.h
+include src/*.cc
+include *.i
+include pyfragments.swg
