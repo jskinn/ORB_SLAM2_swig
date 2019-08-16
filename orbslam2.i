@@ -99,15 +99,6 @@
 %include "include/System.h"
 %include "include/Tracking.h"
 
-// Duplicate the tracking state enum so we can interpret the result of GetTrackingState
-// enum TrackingState {
-//   SYSTEM_NOT_READY,
-//   NO_IMAGES_YET,
-//   NOT_INITIALIZED,
-//   OK,
-//   LOST
-// };
-
 // apply the numpy typemap to enable a more comforable call with 2D images
 %extend ORB_SLAM2::System {
 
