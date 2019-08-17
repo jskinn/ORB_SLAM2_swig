@@ -195,6 +195,7 @@ setup(
                 "src/Sim3Solver.cc",
                 "src/Initializer.cc",
                 "src/Viewer.cc",
+                "src/VocabularyBuilder.cc",
 
                 # Swig
                 "orbslam2.i"

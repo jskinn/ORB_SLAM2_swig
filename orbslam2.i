@@ -7,6 +7,7 @@
 #include "include/KeyFrame.h"
 #include "include/MapPoint.h"
 #include "include/System.h"
+#include "include/VocabularyBuilder.h"
 #include "InterfaceTypes.h"
 //using namespace ORB_SLAM2;
 %}
@@ -99,6 +100,11 @@
 //%immutable ORB_SLAM2::Tracking::mlbLost;
 %immutable ORB_SLAM2::Tracking::mbOnlyTracking;
 
+// Tweak VocabularyBuilder methods to python conventions
+%ignore ORB_SLAM2::VocabularyBuilder::addImage;
+%rename buildVocabulary build_vocabulary;
+
+// Template types for the interface types
 %template(point_list) std::list<Point3D>;
 %template(pose_list) std::list<PoseEstimate>;
 %include "InterfaceTypes.h"
@@ -106,6 +112,7 @@
 // Wrap the ORBSLAM headers
 %include "include/System.h"
 %include "include/Tracking.h"
+%include "include/VocabularyBuilder.h"
 
 // Add some extra methods to ORBSLAM system, to extract data from it.
 %extend ORB_SLAM2::System {
@@ -296,5 +303,13 @@
       }
     }
     return trajectory;
+  }
+}
+
+%extend ORB_SLAM2::VocabularyBuilder {
+  void add_image(unsigned char* image1, int rows1, int cols1)
+  {
+    cv::Mat im(rows1, cols1, cv::DataType<unsigned char>::type, image1);
+    $self->addImage(im);
   }
 }
