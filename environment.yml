@@ -1,0 +1,10 @@
+name: orbslam-swig
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - numpy
+  - swig
+  - opencv
+  - eigen
