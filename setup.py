@@ -201,7 +201,7 @@ setup(
                 "orbslam2.i"
             ],
             language="c++",
-            swig_opts=['-c++','-threads', '-py3', '-v'],
+            swig_opts=['-c++','-threads', '-py3', '-keyword', '-v'],
             extra_compile_args=extra_compile_args,
             include_dirs=list(include_dirs),
             libraries=[] + opencv_libs,

@@ -19,7 +19,7 @@
 %include <std_list.i>
 
 // Auto-document, see http://www.swig.org/Doc4.0/Python.html#Python_nn67
-%feature("autodoc", "1");
+%feature("autodoc", "2");
 
 // handle numpy
 %include numpy.i
