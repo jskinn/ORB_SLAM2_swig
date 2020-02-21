@@ -49,8 +49,9 @@ public:
     );
 
     void addImage(const cv::Mat& image);
+    int getNumFeatures();
     void reset();
-    void buildVocabulary(const std::string &strVocFile) const;
+    void buildVocabulary(const std::string &strVocFile, int branchingFactor = 10, int numLevels = 6) const;
 
 private:
     cv::Ptr<cv::ORB> orb;

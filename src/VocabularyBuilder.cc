@@ -60,17 +60,23 @@ namespace ORB_SLAM2
         this->features.clear();
     }
 
-    void VocabularyBuilder::buildVocabulary(const std::string &strVocFile) const
+    int VocabularyBuilder::getNumFeatures()
+    {
+        int num_images = 0;
+        for (auto iter = this->features.begin(); iter != this->features.end(); ++iter) {
+            num_images += iter->size();
+        }
+        return num_images;
+    }
+
+    void VocabularyBuilder::buildVocabulary(const std::string &strVocFile, int branchingFactor, int numLevels) const
     {
         // Build the vocab and save it to file.
-        // branching factor and depth levels
         // These are hard-coded to be the same as the default ORBSLAM2 vocab.
-        const int k = 10;
-        const int L = 6;
         const DBoW2::WeightingType weight = DBoW2::TF_IDF;
         const DBoW2::ScoringType score = DBoW2::L1_NORM;
 
-        ORB_SLAM2::ORBVocabulary voc(k, L, weight, score);
+        ORB_SLAM2::ORBVocabulary voc(branchingFactor, numLevels, weight, score);
         // Create the vocabulary
         voc.create(this->features);
         // Save it to the specified file
