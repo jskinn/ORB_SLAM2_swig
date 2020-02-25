@@ -20,6 +20,7 @@
 
 
 #include "VocabularyBuilder.h"
+#include "Thirdparty/DBoW2/DUtils/Random.h"
 #include "ORBVocabulary.h"
 
 
@@ -69,13 +70,14 @@ namespace ORB_SLAM2
         return num_images;
     }
 
-    void VocabularyBuilder::buildVocabulary(const std::string &strVocFile, int branchingFactor, int numLevels) const
+    void VocabularyBuilder::buildVocabulary(const std::string &strVocFile, int branchingFactor, int numLevels, int seed) const
     {
         // Build the vocab and save it to file.
         // These are hard-coded to be the same as the default ORBSLAM2 vocab.
         const DBoW2::WeightingType weight = DBoW2::TF_IDF;
         const DBoW2::ScoringType score = DBoW2::L1_NORM;
 
+        DUtils::Random::SeedRand(seed);  // Seed the RNG to control the K-means
         ORB_SLAM2::ORBVocabulary voc(branchingFactor, numLevels, weight, score);
         // Create the vocabulary
         voc.create(this->features);
