@@ -61,7 +61,7 @@ namespace ORB_SLAM2
         this->features.clear();
     }
 
-    int VocabularyBuilder::getNumFeatures()
+    int VocabularyBuilder::getNumFeatures() const
     {
         int num_images = 0;
         for (auto iter = this->features.begin(); iter != this->features.end(); ++iter) {
@@ -70,19 +70,23 @@ namespace ORB_SLAM2
         return num_images;
     }
 
-    void VocabularyBuilder::buildVocabulary(const std::string &strVocFile, int branchingFactor, int numLevels, int seed) const
+    void VocabularyBuilder::buildVocabulary(const std::string &strVocFile, int branchingFactor, int numLevels, int seed)
     {
         // Build the vocab and save it to file.
         // These are hard-coded to be the same as the default ORBSLAM2 vocab.
         const DBoW2::WeightingType weight = DBoW2::TF_IDF;
         const DBoW2::ScoringType score = DBoW2::L1_NORM;
 
-        DUtils::Random::SeedRand(seed);  // Seed the RNG to control the K-means
+        DUtils::Random::SeedRandOnce(seed);  // Seed the RNG to control the K-means
+        DUtils::Random::SeedRand(seed);      // Really actually set the seed to a particular value, even if already seeded.
         ORB_SLAM2::ORBVocabulary voc(branchingFactor, numLevels, weight, score);
         // Create the vocabulary
         voc.create(this->features);
         // Save it to the specified file
         voc.saveToTextFile(strVocFile);
+        // Delete the features.
+        // They've been changed by the clutering step of voc.create, and I'm not sure how to prevent this.
+        this->reset();
     }
 }
 
