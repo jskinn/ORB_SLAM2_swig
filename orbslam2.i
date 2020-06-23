@@ -107,6 +107,7 @@
 // Template types for the interface types
 %template(point_list) std::list<Point3D>;
 %template(pose_list) std::list<PoseEstimate>;
+%template(loop_list) std::list<LoopClosureEdge>;
 %include "InterfaceTypes.h"
 
 // Wrap the ORBSLAM headers
@@ -229,6 +230,34 @@
       points.push_back(pose);
     }
     return points;
+  }
+
+  // Get the number of loop closure edges for each keyframes, as pairs of (timestamp, count)
+  std::list<LoopClosureEdge> get_loop_closures() const
+  {
+    std::vector<ORB_SLAM2::KeyFrame*> vpKFs = $self->GetKeyFrames();
+    std::list<LoopClosureEdge> links;
+    for (std::size_t i=0; i < vpKFs.size(); ++i)
+    {
+      ORB_SLAM2::KeyFrame* pKF = vpKFs[i];
+      if(pKF->isBad())
+      {
+        continue;
+      }
+
+      std::set<ORB_SLAM2::KeyFrame*> loopEdges = pKF->GetLoopEdges();
+      for (std::set<ORB_SLAM2::KeyFrame*>::iterator edgeIter = loopEdges.begin(); edgeIter != loopEdges.end(); ++edgeIter)
+      {
+        if (!(*edgeIter)->isBad())
+        {
+          LoopClosureEdge kfResult;
+          kfResult.origin_kf = pKF->mTimeStamp;
+          kfResult.linked_kf = (*edgeIter)->mTimeStamp;
+          links.push_back(kfResult);
+        }
+      }
+    }
+    return links;
   }
 
   // Get the estimates for all frames, not just key frames

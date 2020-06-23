@@ -36,4 +36,12 @@ struct PoseEstimate
   float t2;
 };
 
+// An edge in the loop closure graph, from one timestamp to another.
+// Both will always be keyframe timestamps, and the mirror should always exist.
+struct LoopClosureEdge
+{
+  float origin_kf;
+  float linked_kf;
+};
+
 #endif /* INTERFACE_TYPES_H */
