@@ -124,7 +124,7 @@ if platform.system() == 'Windows':
 
 setup(
     name="orbslam2",
-    version="0.1.0",
+    version="0.2.0",
     py_modules=["orbslam2"],
     zip_safe=False,
     ext_modules=[
